@@ -7,8 +7,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FELauncher.Host", "FELaunch
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FELauncher.Engine", "FELauncher.Engine\FELauncher.Engine.csproj", "{EAAD5311-F37E-45E2-9E54-DC452FDE9D0C}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "FELAuncher.UI", "FELAuncher.UI", "{CCC76E84-C32C-DDA0-A837-2D2809ACA2A0}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FELauncher.UI", "FELAuncher.UI\FELauncher.UI.csproj", "{D56369EA-8B66-4E89-8821-DC59A46BD668}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FELauncher.Tests", "FELauncher.Tests\FELauncher.Tests.csproj", "{815C29BC-13C5-4800-9BBA-83D7F3E0052F}"
