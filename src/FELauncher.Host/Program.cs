@@ -1,4 +1,5 @@
-﻿using FELauncher.Host.Tray;
+﻿using FELauncher.Engine.Processes;
+using FELauncher.Host.Tray;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
@@ -10,6 +11,7 @@ class Program
     {
         HostApplicationBuilder builder = Host.CreateApplicationBuilder();
 
+        builder.Services.AddSingleton<IProcessManager, ProcessManager>();
         builder.Services.AddSingleton<NotifyIconManager>();
 
         using IHost host = builder.Build();
