@@ -27,11 +27,11 @@ class Program
         
         builder.Services.AddSingleton<IPathResolver, PathResolver>();
         builder.Services.AddSingleton<IProcessManager, ProcessManager>();
-        builder.Services.AddSingleton<NotifyIconManager>();
+        builder.Services.AddSingleton<TrayManager>();
 
         using IHost host = builder.Build();
 
-        host.Services.GetRequiredService<NotifyIconManager>();
+        host.Services.GetRequiredService<TrayManager>();
 
         host.Run();
     }
