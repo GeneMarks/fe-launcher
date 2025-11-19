@@ -1,31 +1,36 @@
 ﻿using FELauncher.Engine.Processes;
+using FELauncher.Engine.Settings;
+using Microsoft.Extensions.Options;
 using System.Reflection;
 
 namespace FELauncher.Host.Tray
 {
-    public class NotifyIconManager
+    public class TrayManager
     {
         private NotifyIcon _notifyIcon;
         private readonly IProcessManager _processManager;
+        private readonly FrontendSettings _frontendSettings;
 
-        public NotifyIconManager(IProcessManager processManager)
+        public TrayManager(IProcessManager processManager, IOptionsMonitor<FrontendSettings> frontendSettings)
         {
             _processManager = processManager;
+            _frontendSettings = frontendSettings.CurrentValue;
 
             _notifyIcon = new NotifyIcon
             {
                 Icon = LoadEmbeddedIcon("FELauncher.Host.Assets.win_ico_16.ico"),
-                Text = "Test",
+                Text = "FE Launcher",
                 Visible = true
             };
 
-            _notifyIcon.Click += new EventHandler(notifyIcon_Click);
-
+            _notifyIcon.MouseDoubleClick += new MouseEventHandler(notifyIcon_DoubleClick);
         }
 
-        private void notifyIcon_Click(object Sender, EventArgs e)
+        private void notifyIcon_DoubleClick(object Sender, MouseEventArgs e)
         {
-            _processManager.StartProcess("notepad.exe");
+            if (e.Button != MouseButtons.Left) return;
+
+            _processManager.StartProcess(_frontendSettings.FrontendPath);
         }
 
         private Icon LoadEmbeddedIcon(string resourceName)
