@@ -1,13 +1,25 @@
+using FELauncher.Engine.IO;
 using System.Diagnostics;
 
 namespace FELauncher.Engine.Processes
 {
     public class ProcessManager : IProcessManager
     {
-        public bool StartProcess(string processPath)
+        private readonly IPathResolver _pathResolver;
+
+        public ProcessManager(IPathResolver pathResolver)
         {
-            Process.Start(processPath);
-            return true;
+            _pathResolver = pathResolver;
+        }
+
+        public void StartProcess(string processPath)
+        {
+            var normalizedPath = _pathResolver.ResolvePath(processPath);
+
+            var startInfo = new ProcessStartInfo(normalizedPath);
+            startInfo.WorkingDirectory = Path.GetDirectoryName(normalizedPath);
+
+            Process.Start(startInfo);
         }
     }
 }
