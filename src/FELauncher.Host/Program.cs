@@ -6,6 +6,7 @@ using FELauncher.Host.Tray;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using WindowsFormsLifetime;
 
 
 class Program
@@ -16,7 +17,7 @@ class Program
         const string settingsFile = "felauncher.json";
         FELauncherSettingsBootstrapper.EnsureSettingsFileExists(settingsFile);
 
-        HostApplicationBuilder builder = Host.CreateApplicationBuilder();
+        var builder = Host.CreateApplicationBuilder();
 
         builder.Configuration.Sources.Clear();
         builder.Configuration
@@ -24,14 +25,15 @@ class Program
             .AddJsonFile(settingsFile, optional: false, reloadOnChange: true);
 
         builder.Services.Configure<FrontendSettings>(builder.Configuration.GetSection(key: "Frontend"));
-        
+
+        builder.Services.AddSingleton<ITrayController, TrayController>();
         builder.Services.AddSingleton<IPathResolver, PathResolver>();
         builder.Services.AddSingleton<IProcessManager, ProcessManager>();
-        builder.Services.AddSingleton<TrayManager>();
+
+        // 
+        builder.UseWindowsFormsLifetime<TrayContext>();
 
         using IHost host = builder.Build();
-
-        host.Services.GetRequiredService<TrayManager>();
 
         host.Run();
     }
