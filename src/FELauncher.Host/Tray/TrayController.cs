@@ -1,6 +1,5 @@
 ﻿using FELauncher.Engine.Processes;
 using FELauncher.Engine.Settings;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 
 namespace FELauncher.Host.Tray
