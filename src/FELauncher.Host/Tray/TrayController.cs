@@ -7,13 +7,11 @@ namespace FELauncher.Host.Tray
 {
     public class TrayController : ITrayController
     {
-        private readonly IHostApplicationLifetime _lifetime;
         private readonly IProcessManager _processManager;
         private readonly FrontendSettings _frontendSettings;
 
-        public TrayController(IHostApplicationLifetime lifetime, IProcessManager processManager, IOptionsMonitor<FrontendSettings> frontendSettings)
+        public TrayController(IProcessManager processManager, IOptionsMonitor<FrontendSettings> frontendSettings)
         {
-            _lifetime = lifetime;
             _processManager = processManager;
             _frontendSettings = frontendSettings.CurrentValue;
         }
@@ -30,7 +28,7 @@ namespace FELauncher.Host.Tray
 
         public void Exit()
         {
-            _lifetime.StopApplication();
+            Application.ExitThread();
         }
     }
 }
