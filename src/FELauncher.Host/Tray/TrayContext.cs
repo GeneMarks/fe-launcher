@@ -14,14 +14,26 @@ namespace FELauncher.Host.Tray
             _controller = controller;
 
             _contextMenu = new ContextMenuStrip();
+            _contextMenu.Renderer = new TrayMenuRenderer();
+
+            var menuItem_LaunchFrontend = new ToolStripMenuItem("Launch Frontend");
+            var menuItem_Options        = new ToolStripMenuItem("Options");
+            var menuItem_Exit           = new ToolStripMenuItem("Exit");
+
+            menuItem_LaunchFrontend.Font   = new Font(
+                menuItem_LaunchFrontend.Font,
+                menuItem_LaunchFrontend.Font.Style
+                | FontStyle.Bold);
+
+            menuItem_LaunchFrontend.Click += (s, e) => _controller.LaunchFrontend();
+            menuItem_Exit.Click           += (s, e) => _controller.Exit();
 
             _contextMenu.Items.Clear();
-            _contextMenu.Items.Add("Launch Frontend", null, (s, e) => _controller.LaunchFrontend());
-            _contextMenu.Items.Add("Options");
+            _contextMenu.Items.Add(menuItem_LaunchFrontend);
+            _contextMenu.Items.Add(menuItem_Options);
             _contextMenu.Items.Add("-");
-            _contextMenu.Items.Add("Exit", null, (s, e) => _controller.Exit());
+            _contextMenu.Items.Add(menuItem_Exit);
 
-            // _contextMenu.Items[0].Font = new Font(_contextMenu.Items[0].Font, _contextMenu.Items[0].Font.Style | FontStyle.Bold);
 
             _notifyIcon = new NotifyIcon
             {
