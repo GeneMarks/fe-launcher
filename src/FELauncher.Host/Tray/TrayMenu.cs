@@ -1,31 +1,20 @@
-﻿using Windows.Win32;
+﻿using System.Drawing;
+using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.UI.WindowsAndMessaging;
 
 namespace FELauncher.Host.Tray
 {
-    public class ContextMenu
+    internal class TrayMenu
     {
-        private HWND _hWnd;
+        private ITrayController _trayController;
 
-        public  ContextMenu()
+        public TrayMenu(ITrayController trayController)
         {
-            unsafe
-            {
-                _hWnd = PInvoke.CreateWindowEx(
-                    0,
-                    "Static",
-                    "",
-                    WINDOW_STYLE.WS_POPUP,
-                    0, 0, 0, 0,
-                    HWND.Null,
-                    null,
-                    null,
-                    null);
-            }
+            _trayController = trayController;
         }
 
-        public void ShowMenu()
+        public void ShowMenu(HWND hWnd)
         {
             Point pt;
             PInvoke.GetCursorPos(out pt);
@@ -39,7 +28,7 @@ namespace FELauncher.Host.Tray
 
             // Foreground must be set to menu's HWND,
             // otherwise menu doesn't close when clicking outside it.
-            PInvoke.SetForegroundWindow(_hWnd);
+            PInvoke.SetForegroundWindow(hWnd);
 
             int choice = PInvoke.TrackPopupMenu(
                 menu,
@@ -48,7 +37,7 @@ namespace FELauncher.Host.Tray
                 | TRACK_POPUP_MENU_FLAGS.TPM_RETURNCMD,
                 pt.X,
                 pt.Y,
-                _hWnd,
+                hWnd,
                 null);
 
             HandleMenuChoice(choice);
@@ -58,13 +47,19 @@ namespace FELauncher.Host.Tray
         {
             switch (choice)
             {
+                // Launch
                 case 1001:
+                    _trayController.LaunchFrontend();
                     break;
 
+                // Options
                 case 1002:
+                    _trayController.OpenSettings();
                     break;
 
+                // Exit
                 case 1003:
+                    _trayController.Exit();
                     break;
 
                 case 0:

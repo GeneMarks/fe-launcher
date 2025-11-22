@@ -6,7 +6,6 @@ using FELauncher.Host.Tray;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using WindowsFormsLifetime;
 
 
 class Program
@@ -27,13 +26,15 @@ class Program
         builder.Services.Configure<FrontendSettings>(builder.Configuration.GetSection(key: "Frontend"));
 
         builder.Services.AddSingleton<ITrayController, TrayController>();
+        builder.Services.AddSingleton<TrayIcon>();
+        builder.Services.AddSingleton<TrayMenu>();
         builder.Services.AddSingleton<IPathResolver, PathResolver>();
         builder.Services.AddSingleton<IProcessManager, ProcessManager>();
 
-        // 
-        builder.UseWindowsFormsLifetime<TrayContext>();
-
         using IHost host = builder.Build();
+
+        var trayIcon = host.Services.GetRequiredService<TrayIcon>();
+        trayIcon.AddNotifyIcon();
 
         host.Run();
     }
