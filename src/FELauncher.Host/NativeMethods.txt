@@ -1,8 +1,12 @@
+AppendMenu
+CreatePopupMenu
+CreateWindowEx
+DefSubclassProc
 GetCursorPos
 SetForegroundWindow
-CreateWindow
-CreateWindowEx
-CreatePopupMenu
-AppendMenu
+SetWindowSubclass
+Shell_NotifyIcon
 TrackPopupMenu
 TrackPopupMenuEx
+WM_*
+WNDPROC
