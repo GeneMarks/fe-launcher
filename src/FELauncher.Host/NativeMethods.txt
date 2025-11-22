@@ -1,0 +1,8 @@
+GetCursorPos
+SetForegroundWindow
+CreateWindow
+CreateWindowEx
+CreatePopupMenu
+AppendMenu
+TrackPopupMenu
+TrackPopupMenuEx
