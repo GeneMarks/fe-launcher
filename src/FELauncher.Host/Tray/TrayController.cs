@@ -27,7 +27,7 @@ namespace FELauncher.Host.Tray
 
         public void Exit()
         {
-            Application.ExitThread();
+            return;
         }
     }
 }
