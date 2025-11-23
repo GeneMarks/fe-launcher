@@ -7,14 +7,15 @@ using Windows.Win32.UI.WindowsAndMessaging;
 
 namespace FELauncher.Host.Tray
 {
-    internal class TrayIcon
+    internal class TrayIcon : IDisposable
     {
         static readonly uint WM_TRAYICON = 0x800 + 1;
 
-        private Guid _guid;
-        private HWND _hWnd;
-        private ITrayController _trayController;
-        private TrayMenu _trayMenu;
+        private readonly Guid _guid;
+        private readonly HWND _hWnd;
+        private readonly ITrayController _trayController;
+        private readonly TrayMenu _trayMenu;
+        private bool _disposed = false;
 
         public TrayIcon(ITrayController trayController, TrayMenu trayMenu)
         {
@@ -42,19 +43,20 @@ namespace FELauncher.Host.Tray
 
         unsafe public bool AddNotifyIcon()
         {
-            NOTIFYICONDATAW nid = new NOTIFYICONDATAW();
-
-            nid.cbSize = (uint)sizeof(NOTIFYICONDATAW);
-            nid.hWnd = _hWnd;
-            nid.uCallbackMessage = WM_TRAYICON;
-            nid.guidItem = _guid;
-            nid.hIcon = LoadEmbeddedIcon("FELauncher.Host.Assets.win_ico_16.ico");
-            nid.szTip = "FE Launcher";
-            nid.uFlags = NOTIFY_ICON_DATA_FLAGS.NIF_MESSAGE
-                       | NOTIFY_ICON_DATA_FLAGS.NIF_ICON
-                       | NOTIFY_ICON_DATA_FLAGS.NIF_TIP
-                       | NOTIFY_ICON_DATA_FLAGS.NIF_GUID
-                       | NOTIFY_ICON_DATA_FLAGS.NIF_SHOWTIP;
+            NOTIFYICONDATAW nid = new NOTIFYICONDATAW
+            {
+                cbSize           = (uint)sizeof(NOTIFYICONDATAW),
+                hWnd             = _hWnd,
+                uCallbackMessage = WM_TRAYICON,
+                guidItem         = _guid,
+                hIcon            = LoadEmbeddedIcon("FELauncher.Host.Assets.win_ico_16.ico"),
+                szTip            = "FE Launcher",
+                uFlags           = NOTIFY_ICON_DATA_FLAGS.NIF_MESSAGE
+                                 | NOTIFY_ICON_DATA_FLAGS.NIF_ICON
+                                 | NOTIFY_ICON_DATA_FLAGS.NIF_TIP
+                                 | NOTIFY_ICON_DATA_FLAGS.NIF_GUID
+                                 | NOTIFY_ICON_DATA_FLAGS.NIF_SHOWTIP
+            };
 
             PInvoke.Shell_NotifyIcon(NOTIFY_ICON_MESSAGE.NIM_ADD, &nid);
 
@@ -97,6 +99,37 @@ namespace FELauncher.Host.Tray
 
             IntPtr hicon = icon.Handle;
             return (HICON)hicon;
+        }
+
+        public void Dispose()
+        {
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (_disposed) return;
+
+            if (disposing)
+            {
+                unsafe
+                {
+                    NOTIFYICONDATAW nid = new NOTIFYICONDATAW
+                    {
+                        cbSize   = (uint)sizeof(NOTIFYICONDATAW),
+                        guidItem = _guid,
+                        uFlags   = NOTIFY_ICON_DATA_FLAGS.NIF_GUID
+                    };
+
+                    PInvoke.Shell_NotifyIcon(NOTIFY_ICON_MESSAGE.NIM_DELETE, &nid);
+                }
+
+                PInvoke.RemoveWindowSubclass(_hWnd, TrayIconSubclassProc, 1);
+                PInvoke.DestroyWindow(_hWnd);
+            }
+
+            _disposed = true;
         }
     }
 }

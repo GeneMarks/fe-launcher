@@ -2,7 +2,9 @@ AppendMenu
 CreatePopupMenu
 CreateWindowEx
 DefSubclassProc
+DestroyWindow
 GetCursorPos
+RemoveWindowSubclass
 SetForegroundWindow
 SetWindowSubclass
 Shell_NotifyIcon
