@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <None Remove="Assets\win_ico_16.ico" />
+    <Content Include="Assets\win_ico_16.ico" />
   </ItemGroup>
 
   <ItemGroup>
@@ -9,14 +9,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="Tray\TrayController.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.0" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.0" />
-    <PackageReference Include="Microsoft.Windows.CsWin32" Version="0.3.252">
+    <PackageReference Include="Microsoft.Windows.CsWin32" Version="0.3.253">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
@@ -30,14 +26,27 @@
     <ProjectReference Include="..\FELauncher.UI\FELauncher.UI.csproj" />
   </ItemGroup>
 
-  <PropertyGroup>
-    <OutputType>WinExe</OutputType>
-    <PlatformTarget>x64</PlatformTarget>
-    <TargetFramework>net8.0-windows</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <UseWPF>true</UseWPF>
-    <ApplicationManifest>app.manifest</ApplicationManifest>
-  </PropertyGroup>
+    <PropertyGroup>
+        <AssemblyName>felauncher</AssemblyName>
+        <ApplicationManifest>app.manifest</ApplicationManifest>
+        <ApplicationIcon>Assets\win_ico_16.ico</ApplicationIcon>
+        <TargetFramework>net9.0-windows</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <UseWPF>true</UseWPF>
+        <OutputType>WinExe</OutputType>
+        <PlatformTarget>x64</PlatformTarget>
+        <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+        <PublishSingleFile>true</PublishSingleFile>
+        <SelfContained>true</SelfContained>
+        <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+        <PublishTrimmed>true</PublishTrimmed>
+        <IsTrimmable>false</IsTrimmable>
+        <TrimMode>partial</TrimMode>
+        <_SuppressWpfTrimError>true</_SuppressWpfTrimError>
+        <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+        <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+        <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
+    </PropertyGroup>
 
 </Project>
