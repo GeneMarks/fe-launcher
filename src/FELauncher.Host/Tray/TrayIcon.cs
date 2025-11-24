@@ -13,6 +13,7 @@ namespace FELauncher.Host.Tray
 
         private static readonly Guid _guid = new Guid("30d48266-26d4-4a9d-875c-735d2eafcbad");
 
+        private readonly HICON _hicon;
         private readonly HWND _hWnd;
         private readonly ITrayController _trayController;
         private readonly TrayMenu _trayMenu;
@@ -23,6 +24,8 @@ namespace FELauncher.Host.Tray
         {
             _trayController = trayController;
             _trayMenu = trayMenu;
+
+            _hicon = LoadEmbeddedIcon("FELauncher.Host.Assets.win_ico_16.ico");
 
             unsafe
             {
@@ -49,7 +52,7 @@ namespace FELauncher.Host.Tray
                 hWnd             = _hWnd,
                 uCallbackMessage = WM_TRAYICON,
                 guidItem         = _guid,
-                hIcon            = LoadEmbeddedIcon("FELauncher.Host.Assets.win_ico_16.ico"),
+                hIcon            = _hicon,
                 szTip            = "FE Launcher",
                 uFlags           = NOTIFY_ICON_DATA_FLAGS.NIF_MESSAGE
                                  | NOTIFY_ICON_DATA_FLAGS.NIF_ICON
@@ -64,7 +67,7 @@ namespace FELauncher.Host.Tray
             return PInvoke.Shell_NotifyIcon(NOTIFY_ICON_MESSAGE.NIM_SETVERSION, &nid);
         }
 
-        unsafe private LRESULT TrayIconSubclassProc(
+        private LRESULT TrayIconSubclassProc(
             HWND hWnd,
             uint uMsg,
             WPARAM wParam,
@@ -90,15 +93,15 @@ namespace FELauncher.Host.Tray
             return PInvoke.DefSubclassProc(hWnd, uMsg, wParam, lParam);
         }
 
-        unsafe private HICON LoadEmbeddedIcon(string resourceName)
+        private HICON LoadEmbeddedIcon(string resourceName)
         {
             var assembly = Assembly.GetExecutingAssembly();
             using var stream = assembly.GetManifestResourceStream(resourceName);
 
             Icon icon = new Icon(stream);
 
-            IntPtr hicon = icon.Handle;
-            return (HICON)hicon;
+            HICON hicon = (HICON)icon.Handle;
+            return PInvoke.CopyIcon(hicon);
         }
 
         public void Dispose()
@@ -127,6 +130,7 @@ namespace FELauncher.Host.Tray
 
                 PInvoke.RemoveWindowSubclass(_hWnd, TrayIconSubclassProc, 1);
                 PInvoke.DestroyWindow(_hWnd);
+                PInvoke.DestroyIcon(_hicon);
             }
 
             _disposed = true;
