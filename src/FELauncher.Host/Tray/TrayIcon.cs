@@ -9,20 +9,20 @@ namespace FELauncher.Host.Tray
 {
     internal class TrayIcon : IDisposable
     {
-        static readonly uint WM_TRAYICON = 0x800 + 1;
+        private const uint WM_TRAYICON = 0x800 + 1;
 
-        private readonly Guid _guid;
+        private static readonly Guid _guid = new Guid("30d48266-26d4-4a9d-875c-735d2eafcbad");
+
         private readonly HWND _hWnd;
         private readonly ITrayController _trayController;
         private readonly TrayMenu _trayMenu;
+
         private bool _disposed = false;
 
         public TrayIcon(ITrayController trayController, TrayMenu trayMenu)
         {
             _trayController = trayController;
             _trayMenu = trayMenu;
-
-            _guid = Guid.NewGuid();
 
             unsafe
             {
