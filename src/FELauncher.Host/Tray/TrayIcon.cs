@@ -9,88 +9,26 @@ namespace FELauncher.Host.Tray
 {
     internal class TrayIcon : IDisposable
     {
-        private const uint WM_TRAYICON = 0x800 + 1;
+        private readonly HICON _hIcon;
+        private readonly NOTIFYICONDATAW _iconData;
 
-        private static readonly Guid _guid = new Guid("30d48266-26d4-4a9d-875c-735d2eafcbad");
-
-        private readonly HICON _hicon;
-        private readonly HWND _hWnd;
-        private readonly ITrayController _trayController;
-        private readonly TrayMenu _trayMenu;
-
-        private bool _disposed = false;
-
-        public TrayIcon(ITrayController trayController, TrayMenu trayMenu)
+        public TrayIcon(HWND hWnd, uint callbackMsg)
         {
-            _trayController = trayController;
-            _trayMenu = trayMenu;
-
-            _hicon = LoadEmbeddedIcon("FELauncher.Host.Assets.win_ico_16.ico");
+            _hIcon = LoadEmbeddedIcon("FELauncher.Host.Assets.win_ico_16.ico");
 
             unsafe
             {
-                _hWnd = PInvoke.CreateWindowEx(
-                    0,
-                    "Static",
-                    "",
-                    WINDOW_STYLE.WS_POPUP,
-                    0, 0, 0, 0,
-                    HWND.Null,
-                    null,
-                    null,
-                    null);
-
-                PInvoke.SetWindowSubclass(_hWnd, TrayIconSubclassProc, 1, 0);
+                _iconData.cbSize             = (uint)sizeof(NOTIFYICONDATAW);
+                _iconData.hWnd               = hWnd;
+                _iconData.uID                = 1;
+                _iconData.uCallbackMessage   = callbackMsg;
+                _iconData.hIcon              = _hIcon;
+                _iconData.szTip              = "FE Launcher";
+                _iconData.Anonymous.uVersion = 3; // todo: upgrade to v4
+                _iconData.uFlags             = NOTIFY_ICON_DATA_FLAGS.NIF_MESSAGE
+                                             | NOTIFY_ICON_DATA_FLAGS.NIF_ICON
+                                             | NOTIFY_ICON_DATA_FLAGS.NIF_TIP;
             }
-        }
-
-        unsafe public bool AddNotifyIcon()
-        {
-            NOTIFYICONDATAW nid = new NOTIFYICONDATAW
-            {
-                cbSize           = (uint)sizeof(NOTIFYICONDATAW),
-                hWnd             = _hWnd,
-                uCallbackMessage = WM_TRAYICON,
-                guidItem         = _guid,
-                hIcon            = _hicon,
-                szTip            = "FE Launcher",
-                uFlags           = NOTIFY_ICON_DATA_FLAGS.NIF_MESSAGE
-                                 | NOTIFY_ICON_DATA_FLAGS.NIF_ICON
-                                 | NOTIFY_ICON_DATA_FLAGS.NIF_TIP
-                                 | NOTIFY_ICON_DATA_FLAGS.NIF_GUID
-                                 | NOTIFY_ICON_DATA_FLAGS.NIF_SHOWTIP
-            };
-
-            PInvoke.Shell_NotifyIcon(NOTIFY_ICON_MESSAGE.NIM_ADD, &nid);
-
-            nid.Anonymous.uVersion = 4;
-            return PInvoke.Shell_NotifyIcon(NOTIFY_ICON_MESSAGE.NIM_SETVERSION, &nid);
-        }
-
-        private LRESULT TrayIconSubclassProc(
-            HWND hWnd,
-            uint uMsg,
-            WPARAM wParam,
-            LPARAM lParam,
-            nuint uIdSubclass,
-            nuint dwRefData)
-        {
-            if (uMsg == WM_TRAYICON)
-            {
-                uint eventId = (uint)lParam.Value;
-                switch (eventId)
-                {
-                    case PInvoke.WM_LBUTTONDBLCLK:
-                        _trayController.LaunchFrontend();
-                        break;
-
-                    case PInvoke.WM_RBUTTONUP:
-                        _trayMenu.ShowMenu(_hWnd);
-                        break;
-                }
-            }
-
-            return PInvoke.DefSubclassProc(hWnd, uMsg, wParam, lParam);
         }
 
         private HICON LoadEmbeddedIcon(string resourceName)
@@ -104,36 +42,16 @@ namespace FELauncher.Host.Tray
             return PInvoke.CopyIcon(hicon);
         }
 
-        public void Dispose()
+        public void AddIcon()
         {
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
+            PInvoke.Shell_NotifyIcon(NOTIFY_ICON_MESSAGE.NIM_ADD, _iconData);
+            PInvoke.Shell_NotifyIcon(NOTIFY_ICON_MESSAGE.NIM_SETVERSION, _iconData);
         }
 
-        protected virtual void Dispose(bool disposing)
+        public void Dispose()
         {
-            if (_disposed) return;
-
-            if (disposing)
-            {
-                unsafe
-                {
-                    NOTIFYICONDATAW nid = new NOTIFYICONDATAW
-                    {
-                        cbSize   = (uint)sizeof(NOTIFYICONDATAW),
-                        guidItem = _guid,
-                        uFlags   = NOTIFY_ICON_DATA_FLAGS.NIF_GUID
-                    };
-
-                    PInvoke.Shell_NotifyIcon(NOTIFY_ICON_MESSAGE.NIM_DELETE, &nid);
-                }
-
-                PInvoke.RemoveWindowSubclass(_hWnd, TrayIconSubclassProc, 1);
-                PInvoke.DestroyWindow(_hWnd);
-                PInvoke.DestroyIcon(_hicon);
-            }
-
-            _disposed = true;
+            PInvoke.Shell_NotifyIcon(NOTIFY_ICON_MESSAGE.NIM_DELETE, _iconData);
+            PInvoke.DestroyIcon(_hIcon);
         }
     }
 }

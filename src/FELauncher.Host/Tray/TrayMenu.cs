@@ -5,16 +5,9 @@ using Windows.Win32.UI.WindowsAndMessaging;
 
 namespace FELauncher.Host.Tray
 {
-    internal class TrayMenu
+    internal static class TrayMenu
     {
-        private ITrayController _trayController;
-
-        public TrayMenu(ITrayController trayController)
-        {
-            _trayController = trayController;
-        }
-
-        public void ShowMenu(HWND hWnd)
+        public static void ShowMenu(HWND hWnd, ITrayController controller)
         {
             Point pt;
             PInvoke.GetCursorPos(out pt);
@@ -22,44 +15,49 @@ namespace FELauncher.Host.Tray
             using var menu = PInvoke.CreatePopupMenu_SafeHandle();
 
             PInvoke.AppendMenu(menu, MENU_ITEM_FLAGS.MF_STRING, 1001, "Launch");
+            PInvoke.AppendMenu(menu, MENU_ITEM_FLAGS.MF_SEPARATOR, 0, null);
+            PInvoke.AppendMenu(menu, MENU_ITEM_FLAGS.MF_STRING, 1004, "Install Dependencies");
             PInvoke.AppendMenu(menu, MENU_ITEM_FLAGS.MF_STRING, 1002, "Options");
             PInvoke.AppendMenu(menu, MENU_ITEM_FLAGS.MF_SEPARATOR, 0, null);
             PInvoke.AppendMenu(menu, MENU_ITEM_FLAGS.MF_STRING, 1003, "Exit");
 
-            // Foreground must be set to menu's HWND,
+            // Foreground must be set to current HWND,
             // otherwise menu doesn't close when clicking outside it.
             PInvoke.SetForegroundWindow(hWnd);
 
-            int choice = PInvoke.TrackPopupMenu(
+            int choice = PInvoke.TrackPopupMenuEx(
                 menu,
-                TRACK_POPUP_MENU_FLAGS.TPM_LEFTALIGN
-                | TRACK_POPUP_MENU_FLAGS.TPM_RIGHTBUTTON
-                | TRACK_POPUP_MENU_FLAGS.TPM_RETURNCMD,
+                (uint)TRACK_POPUP_MENU_FLAGS.TPM_LEFTALIGN
+              | (uint)TRACK_POPUP_MENU_FLAGS.TPM_RIGHTBUTTON
+              | (uint)TRACK_POPUP_MENU_FLAGS.TPM_RETURNCMD,
                 pt.X,
                 pt.Y,
                 hWnd,
                 null);
 
-            HandleMenuChoice(choice);
+            HandleMenuChoice(choice, controller);
         }
 
-        private void HandleMenuChoice(int choice)
+        private static void HandleMenuChoice(int choice, ITrayController controller)
         {
             switch (choice)
             {
                 // Launch
                 case 1001:
-                    _trayController.LaunchFrontend();
+                    controller.LaunchFrontend();
+                    break;
+
+                // Install Dependencies
+                case 1004:
                     break;
 
                 // Options
                 case 1002:
-                    _trayController.OpenSettings();
                     break;
 
                 // Exit
                 case 1003:
-                    _trayController.Exit();
+                    controller.Exit();
                     break;
 
                 case 0:

@@ -26,15 +26,11 @@ class Program
         builder.Services.Configure<FrontendSettings>(builder.Configuration.GetSection(key: "Frontend"));
 
         builder.Services.AddSingleton<ITrayController, TrayController>();
-        builder.Services.AddSingleton<TrayIcon>();
-        builder.Services.AddSingleton<TrayMenu>();
+        builder.Services.AddHostedService<TrayService>();
         builder.Services.AddSingleton<IPathResolver, PathResolver>();
         builder.Services.AddSingleton<IProcessManager, ProcessManager>();
 
         using IHost host = builder.Build();
-
-        var trayIcon = host.Services.GetRequiredService<TrayIcon>();
-        trayIcon.AddNotifyIcon();
 
         host.Run();
     }

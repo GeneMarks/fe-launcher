@@ -9,7 +9,7 @@ namespace FELauncher.Host.Tray
     {
         private readonly IHostApplicationLifetime _lifetime;
         private readonly IProcessManager _processManager;
-        private readonly FrontendSettings _frontendSettings;
+        private readonly IOptionsMonitor<FrontendSettings> _frontendSettings;
 
         public TrayController(
             IHostApplicationLifetime lifetime,
@@ -18,12 +18,13 @@ namespace FELauncher.Host.Tray
         {
             _lifetime = lifetime;
             _processManager = processManager;
-            _frontendSettings = frontendSettings.CurrentValue;
+            _frontendSettings = frontendSettings;
         }
 
         public void LaunchFrontend()
         {
-            _processManager.StartProcess(_frontendSettings.FrontendPath);
+            var fePath = _frontendSettings.CurrentValue.FrontendPath;
+            _processManager.StartProcess(fePath);
         }
 
         public void OpenSettings()
