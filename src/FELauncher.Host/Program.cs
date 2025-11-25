@@ -10,18 +10,49 @@ using Microsoft.Extensions.Hosting;
 
 class Program
 {
+    private const string MutexName = @"Global\5fa78146-d6da-4f0a-954d-7aff5ebc3106";
+
     [STAThread]
     static void Main(string[] args)
     {
-        const string settingsFile = "felauncher.json";
-        FELauncherSettingsBootstrapper.EnsureSettingsFileExists(settingsFile);
+        using var mutex = new Mutex(false, MutexName);
+        bool hasHandle = false;
+
+        try
+        {
+            try
+            {
+                hasHandle = mutex.WaitOne(0, false);
+            }
+            catch (AbandonedMutexException)
+            {
+                hasHandle = true;
+            }
+
+            if (!hasHandle) return;
+
+            RunFELauncher();
+        }
+        finally
+        {
+            if (hasHandle)
+            {
+                mutex.ReleaseMutex();
+            }
+        }
+    }
+
+    private static void RunFELauncher()
+    {
+        const string SettingsFile = "felauncher.json";
+        FELauncherSettingsBootstrapper.EnsureSettingsFileExists(SettingsFile);
 
         var builder = Host.CreateApplicationBuilder();
 
         builder.Configuration.Sources.Clear();
         builder.Configuration
             .SetBasePath(AppContext.BaseDirectory)
-            .AddJsonFile(settingsFile, optional: false, reloadOnChange: true);
+            .AddJsonFile(SettingsFile, optional: false, reloadOnChange: true);
 
         builder.Services.Configure<FrontendSettings>(builder.Configuration.GetSection(key: "Frontend"));
 
