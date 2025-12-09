@@ -1,9 +1,8 @@
-using FELauncher.Engine.Logging;
 using Microsoft.Extensions.Logging;
 
 namespace FELauncher.Engine.IO
 {
-	public sealed class PathResolver : IPathResolver
+	internal sealed class PathResolver : IPathResolver
 	{
 		private readonly ILogger<PathResolver> _logger;
 		private readonly string _basePath;
@@ -18,19 +17,19 @@ namespace FELauncher.Engine.IO
 		{
 			if (string.IsNullOrEmpty(path))
 			{
-				_logger.IO_ResolverPathNullOrEmpty();
+				_logger.PathNullOrEmpty();
 				return String.Empty;
 			}
 
 			if (IsAbsolute(path))
 			{
-				_logger.IO_ResolverPathAbsolute(path);
+				_logger.PathAbsolute(path);
 				return path;
 			}
 
 			var resolvedPath = Path.GetFullPath(Path.Combine(_basePath, path));
 
-			_logger.IO_ResolverResult(resolvedPath);
+			_logger.ResolvedResult(resolvedPath);
 			return resolvedPath;
 		}
 
