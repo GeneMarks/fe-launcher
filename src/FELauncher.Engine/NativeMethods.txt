@@ -1,0 +1,6 @@
+AssignProcessToJobObject
+CreateJobObject
+IsProcessInJob
+TerminateJobObject
+UpdateProcThreadAttribute
+WIN32_ERROR
