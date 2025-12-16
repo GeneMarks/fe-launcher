@@ -2,85 +2,167 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32.SafeHandles;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Windows.Win32;
+using Windows.Win32.Foundation;
+using Windows.Win32.System.JobObjects;
 
 namespace FELauncher.Engine.Sessions
 {
-    internal sealed class JobObjectManager : IJobObjectManager, IDisposable
+    internal sealed class JobObjectManager(ILogger<JobObjectManager> logger) : IJobObjectManager, IDisposable
     {
-        private SafeFileHandle? _hJobObject;
+        private SafeFileHandle? _safeJobHandle;
+        private SafeFileHandle? _safeCompletionPortHandle;
 
-        private readonly ILogger<JobObjectManager> _logger;
-
-        public JobObjectManager(ILogger<JobObjectManager> logger)
+        public SafeFileHandle SafeJobHandle
         {
-            _logger = logger;
+            get
+            {
+                if (_safeJobHandle is null || _safeJobHandle.IsInvalid)
+                {
+                    logger.TriedToAccessNullOrInvalidJobHandle();
+                    throw new JobObjectException("Tried to access null or invalid job handle.");
+                }
+
+                return _safeJobHandle;
+            }
         }
 
         public void ResetJobObject()
         {
             ReleaseJobObject();
-            _hJobObject = CreateJobObject();
+            _safeJobHandle = CreateJobObject();
         }
 
-        public void AssignToJobObject(Process process)
+        public async Task WaitForJobObjectCompletionAsync(CancellationToken ct)
         {
-            SafeFileHandle hProcess = new(process.Handle, ownsHandle: false); // Process object already owns handle.
-
-            // Return value is 0 if function fails.
-            if (!PInvoke.AssignProcessToJobObject(_hJobObject, hProcess))
+            if (_safeJobHandle is null || _safeJobHandle.IsInvalid)
             {
-                var win32Message = Marshal.GetLastPInvokeErrorMessage();
-                var win32ErrCode = Marshal.GetLastPInvokeError();
-                var win32Ex = new Win32Exception(win32ErrCode);
+                logger.TriedToWaitNullOrInvalidJobHandle();
+                throw new JobObjectException("Tried to wait for completion of null or invalid job handle.");
+            }
 
-                _logger.FailedToAssignProcessToJobObject(process, win32Message);
-                throw new JobObjectException($"Failed to assign process '{process}' to job object.", win32Ex);
+            SetupIOCompletionPort();
+
+            try
+            {
+                await Task.Run(() => WaitForCompletionStatus(ct));
+            }
+            finally
+            {
+                ReleaseJobObject();
             }
         }
 
         public void TerminateJobObject()
         {
-            if (_hJobObject is null || _hJobObject.IsInvalid) return; // todo: log here?
-
-            // Return value is 0 if function fails.
-            if (!PInvoke.TerminateJobObject(_hJobObject, 0))
+            if (_safeJobHandle is null || _safeJobHandle.IsInvalid)
             {
-                var win32Message = Marshal.GetLastPInvokeErrorMessage();
-                var win32ErrCode = Marshal.GetLastPInvokeError();
-                var win32Ex = new Win32Exception(win32ErrCode);
+                logger.TerminationUnecessary();
+                return;
+            }
 
-                _logger.FailedToTerminateJobObject(win32Message);
+            if (!PInvoke.TerminateJobObject(_safeJobHandle, 0))
+            {
+                var errorCode = Marshal.GetLastPInvokeError();
+                var win32Ex = new Win32Exception(errorCode);
+
+                logger.FailedToTerminateJobObject(errorCode, win32Ex.Message);
                 throw new JobObjectException($"Failed to terminate job object.", win32Ex);
             }
         }
-
+            
         private SafeFileHandle CreateJobObject()
         {
-            SafeFileHandle hJobObject = PInvoke.CreateJobObject(lpJobAttributes: null, lpName: null);
+            SafeFileHandle safeJobHandle = PInvoke.CreateJobObject(null, null);
 
-            if (hJobObject.IsInvalid)
+            if (safeJobHandle.IsInvalid)
             {
-                var win32Message = Marshal.GetLastPInvokeErrorMessage();
-                var win32ErrCode = Marshal.GetLastPInvokeError();
-                var win32Ex = new Win32Exception(win32ErrCode);
+                var errorCode = Marshal.GetLastPInvokeError();
+                var win32Ex = new Win32Exception(errorCode);
 
-                _logger.FailedToCreateJobObject(win32Message);
+                logger.FailedToCreateJobObject(errorCode, win32Ex.Message);
                 throw new JobObjectException("Failed to create job object.", win32Ex);
             }
 
-            return hJobObject;
+            return safeJobHandle;
+        }
+
+        private unsafe void SetupIOCompletionPort()
+        {
+            _safeCompletionPortHandle = PInvoke.CreateIoCompletionPort(
+                new SafeFileHandle(HANDLE.INVALID_HANDLE_VALUE, false), null, 0, 1);
+
+            if (_safeCompletionPortHandle is null || _safeCompletionPortHandle.IsInvalid)
+            {
+                var errorCode = Marshal.GetLastPInvokeError();
+                var win32Ex = new Win32Exception(errorCode);
+
+                logger.FailedToCreateIoCompletionPort(errorCode, win32Ex.Message);
+                throw new JobObjectException("Failed to create IO completion port.", win32Ex);
+            }
+
+            var jobHandle = _safeJobHandle!.DangerousGetHandle();
+            JOBOBJECT_ASSOCIATE_COMPLETION_PORT port = new()
+            {
+                CompletionKey = (void*)jobHandle,
+                CompletionPort = (HANDLE)_safeCompletionPortHandle.DangerousGetHandle()
+            };
+
+            if (!PInvoke.SetInformationJobObject(
+                (HANDLE)jobHandle,
+                JOBOBJECTINFOCLASS.JobObjectAssociateCompletionPortInformation,
+                &port, (uint)sizeof(JOBOBJECT_ASSOCIATE_COMPLETION_PORT)))
+            {
+                var errorCode = Marshal.GetLastPInvokeError();
+                var win32Ex = new Win32Exception(errorCode);
+
+                logger.FailedToSetJobObjectLimits(errorCode, win32Ex.Message);
+                throw new JobObjectException("Failed to set job object limits.", win32Ex);
+            }
+        }
+
+        private unsafe void WaitForCompletionStatus(CancellationToken ct)
+        {
+            using var reg = ct.Register(() =>
+                // Posts a dummy completion packet to break loop
+                PInvoke.PostQueuedCompletionStatus(_safeCompletionPortHandle, 0, 0, null));
+
+            uint completionCode;
+            nuint completionKey;
+            NativeOverlapped* overlapped;
+
+            while (true)
+            {
+                if (!PInvoke.GetQueuedCompletionStatus(
+                    _safeCompletionPortHandle,
+                    out completionCode, out completionKey, out overlapped,
+                    PInvoke.INFINITE))
+                {
+                    logger.FailedToGetCompletionStatus();
+                    return;
+                }
+
+                // Cancel if dummy completion packet received
+                if (completionCode == 0 && completionKey == 0)
+                {
+                    ct.ThrowIfCancellationRequested();
+                }
+
+                if ((HANDLE)completionKey == (HANDLE)_safeJobHandle!.DangerousGetHandle()
+                    && completionCode == PInvoke.JOB_OBJECT_MSG_ACTIVE_PROCESS_ZERO)
+                {
+                    return;
+                }
+            }
         }
 
         private void ReleaseJobObject()
         {
-            if (_hJobObject is not null && !_hJobObject.IsInvalid)
-            {
-                _hJobObject.Close();
-                _hJobObject = null;
-            }
+            _safeJobHandle?.Dispose();
+            _safeJobHandle = null;
+            _safeCompletionPortHandle?.Dispose();
+            _safeCompletionPortHandle = null;
         }
 
         public void Dispose()
