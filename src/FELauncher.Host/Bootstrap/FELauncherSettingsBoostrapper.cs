@@ -6,16 +6,23 @@ namespace FELauncher.Host.Bootstrap
 {
     public static class FELauncherSettingsBootstrapper
     {
+        private static readonly JsonSerializerOptions jsonOptions = new()
+        {
+            WriteIndented = true
+        };
+
         public static void EnsureSettingsFileExists(string settingsFile)
         {
             if (Path.Exists(settingsFile)) return;
 
-            var bootstrapSettings = new FELauncherSettings();
+            var feLauncherSettings = new FELauncherSettings();
 
-            var serializedSettings = JsonSerializer.Serialize(bootstrapSettings, new JsonSerializerOptions
+            var settings = new
             {
-                WriteIndented = true
-            });
+                FELauncher = feLauncherSettings
+            };
+
+            var serializedSettings = JsonSerializer.Serialize(settings, jsonOptions);
 
             // todo: error handling
             try
