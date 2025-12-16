@@ -2,20 +2,14 @@
 
 namespace FELauncher.Host.Tray
 {
-    public class TrayService : BackgroundService
+    internal sealed class TrayService(TrayController controller) : BackgroundService
     {
-        private readonly ITrayController _controller;
         private Thread? _thread;
         private TrayWindowHost? _tray;
 
-        public TrayService(ITrayController controller)
+        protected override Task ExecuteAsync(CancellationToken ct)
         {
-            _controller = controller;
-        }
-
-        protected override Task ExecuteAsync(CancellationToken stoppingToken)
-        {
-            _tray = new TrayWindowHost(_controller);
+            _tray = new TrayWindowHost(controller);
 
             _thread = new Thread(_tray.Run)
             {
@@ -26,15 +20,15 @@ namespace FELauncher.Host.Tray
             _thread.SetApartmentState(ApartmentState.STA);
             _thread.Start();
 
-            stoppingToken.Register(() => _tray.Stop());
+            ct.Register(() => _tray.Stop());
 
             return Task.CompletedTask;
         }
 
-        public override Task StopAsync(CancellationToken cancellationToken)
+        public override Task StopAsync(CancellationToken ct)
         {
             _tray?.Stop();
-            return base.StopAsync(cancellationToken);
+            return base.StopAsync(ct);
         }
     }
 }
