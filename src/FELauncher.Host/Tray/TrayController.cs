@@ -1,40 +1,49 @@
-﻿using FELauncher.Engine.Processes;
-using FELauncher.Engine.Settings;
+﻿using FELauncher.Engine.Sessions;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Logging;
+using System.Diagnostics;
 
 namespace FELauncher.Host.Tray
 {
-    public class TrayController : ITrayController
+    internal sealed class TrayController(
+        ILogger<TrayController> logger,
+        IHostApplicationLifetime lifetime,
+        ISessionManager sessionManager)
     {
-        private readonly IHostApplicationLifetime _lifetime;
-        private readonly IProcessManager _processManager;
-        private readonly IOptionsMonitor<FrontendSettings> _frontendSettings;
-
-        public TrayController(
-            IHostApplicationLifetime lifetime,
-            IProcessManager processManager,
-            IOptionsMonitor<FrontendSettings> frontendSettings)
-        {
-            _lifetime = lifetime;
-            _processManager = processManager;
-            _frontendSettings = frontendSettings;
-        }
+        public bool IsSessionActive => sessionManager.IsSessionActive;
 
         public void LaunchFrontend()
         {
-            var fePath = _frontendSettings.CurrentValue.FrontendPath;
-            _processManager.StartProcess(fePath);
+            var ct = sessionManager.CancellationTokenSource.Token;
+            sessionManager.StartNewSessionAsync(ct);
+        }
+
+        public void EndSession()
+        {
+            var cts = sessionManager.CancellationTokenSource;
+            cts.Cancel();
         }
 
         public void OpenSettings()
         {
+            // todo
             return;
         }
 
         public void Exit()
         {
-            _lifetime.StopApplication();
+            lifetime.StopApplication();
+        }
+
+        public static void CheckUpdates()
+        {
+            var psi = new ProcessStartInfo(HostConstants.CheckUpdatesUrl)
+            {
+                UseShellExecute = true
+            };
+
+            try { Process.Start(psi); }
+            catch { }
         }
     }
 }

@@ -7,19 +7,24 @@ namespace FELauncher.Host.Tray
 {
     internal static class TrayMenu
     {
-        public static void ShowMenu(HWND hWnd, ITrayController controller)
+        private struct Items
+        {
+            public const nuint Launch              = 1000;
+            public const nuint EndSession          = 1010;
+            public const nuint InstallDependencies = 1020;
+            public const nuint Options             = 1030;
+            public const nuint CheckUpdates        = 1040;
+            public const nuint Exit                = 1050;
+        }
+
+        public static void ShowMenu(HWND hWnd, TrayController controller)
         {
             Point pt;
             PInvoke.GetCursorPos(out pt);
 
             using var menu = PInvoke.CreatePopupMenu_SafeHandle();
 
-            PInvoke.AppendMenu(menu, MENU_ITEM_FLAGS.MF_STRING, 1001, "Launch");
-            PInvoke.AppendMenu(menu, MENU_ITEM_FLAGS.MF_SEPARATOR, 0, null);
-            PInvoke.AppendMenu(menu, MENU_ITEM_FLAGS.MF_STRING, 1004, "Install Dependencies");
-            PInvoke.AppendMenu(menu, MENU_ITEM_FLAGS.MF_STRING, 1002, "Options");
-            PInvoke.AppendMenu(menu, MENU_ITEM_FLAGS.MF_SEPARATOR, 0, null);
-            PInvoke.AppendMenu(menu, MENU_ITEM_FLAGS.MF_STRING, 1003, "Exit");
+            PopulateMenu(menu, controller.IsSessionActive);
 
             // Foreground must be set to current HWND,
             // otherwise menu doesn't close when clicking outside it.
@@ -38,29 +43,65 @@ namespace FELauncher.Host.Tray
             HandleMenuChoice(choice, controller);
         }
 
-        private static void HandleMenuChoice(int choice, ITrayController controller)
+        private static void PopulateMenu(DestroyMenuSafeHandle menu, bool isSessionActive)
         {
-            switch (choice)
+            AppendMenuItem(menu,
+                isSessionActive ? Items.EndSession : Items.Launch,
+                isSessionActive ? "End session" : "Launch");
+            AppendMenuItem(menu);
+            AppendMenuItem(menu, Items.InstallDependencies, "Install dependencies", isSessionActive);
+            AppendMenuItem(menu, Items.Options, "Options", isSessionActive);
+            AppendMenuItem(menu);
+            AppendMenuItem(menu, Items.CheckUpdates, "Check updates", false);
+            AppendMenuItem(menu);
+            AppendMenuItem(menu, Items.Exit, "Exit", isSessionActive);
+        }
+        
+        private static void AppendMenuItem(DestroyMenuSafeHandle menu,
+            nuint id, string label, bool disabled = false)
+        {
+            var flags = MENU_ITEM_FLAGS.MF_STRING | (disabled ? MENU_ITEM_FLAGS.MF_DISABLED : 0);
+            PInvoke.AppendMenu( menu, flags, id, label);
+        }
+        
+        private static void AppendMenuItem(DestroyMenuSafeHandle menu)
+        {
+            PInvoke.AppendMenu(menu, MENU_ITEM_FLAGS.MF_SEPARATOR, 0, null);
+        }
+
+        private static void HandleMenuChoice(int choice, TrayController controller)
+        {
+            switch ((nuint)choice)
             {
                 // Launch
-                case 1001:
+                case Items.Launch:
                     controller.LaunchFrontend();
                     break;
 
-                // Install Dependencies
-                case 1004:
+                // End session
+                case Items.EndSession:
+                    controller.EndSession();
+                    break;
+
+                // Install dependencies
+                case Items.InstallDependencies:
                     break;
 
                 // Options
-                case 1002:
+                case Items.Options:
+                    break;
+
+                // Check updates
+                case Items.CheckUpdates:
+                    TrayController.CheckUpdates();
                     break;
 
                 // Exit
-                case 1003:
+                case Items.Exit:
                     controller.Exit();
                     break;
 
-                case 0:
+                default:
                     break;
             }
         }
