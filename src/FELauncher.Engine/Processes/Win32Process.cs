@@ -1,0 +1,141 @@
+﻿using FELauncher.Engine.Exceptions;
+using Microsoft.Extensions.Logging;
+using Microsoft.Win32.SafeHandles;
+using System.ComponentModel;
+using System.Runtime.InteropServices;
+using Windows.Win32;
+using Windows.Win32.Foundation;
+using Windows.Win32.System.Threading;
+
+namespace FELauncher.Engine.Processes
+{
+    public sealed class Win32Process : IDisposable
+    {
+        public event EventHandler<Win32ProcessExitedArgs>? Exited;
+
+        private readonly ILogger<Win32Process> _logger;
+
+        private readonly string _pathWithArgs;
+        private readonly string? _workingDir;
+        private SafeFileHandle? _safeProcHandle;
+        private SafeFileHandle? _safeWaitHandle;
+
+        public Win32Process(
+            ILogger<Win32Process> logger,
+            string pathWithArgs,
+            string? workingDir)
+        {
+            _logger = logger;
+            _pathWithArgs = pathWithArgs;
+            _workingDir = workingDir;
+        }
+
+        public unsafe void StartInJob(SafeFileHandle safeJobHandle)
+        {
+            nuint size = 0;
+            // First call used to assign size.
+            // Errors intentionally. Function return will always be zero.
+            PInvoke.InitializeProcThreadAttributeList(LPPROC_THREAD_ATTRIBUTE_LIST.Null, 1, 0, &size);
+
+            IntPtr listBuffer = Marshal.AllocHGlobal((nint)size);
+            var list = (LPPROC_THREAD_ATTRIBUTE_LIST)listBuffer;
+
+            try
+            {
+                if (!PInvoke.InitializeProcThreadAttributeList(list, 1, 0, &size))
+                {
+                    var errorCode = Marshal.GetLastPInvokeError();
+                    var win32Ex = new Win32Exception(errorCode);
+
+                    _logger.FailedToInitializeAttributeList(_pathWithArgs, errorCode, win32Ex.Message);
+                    throw new Win32ProcessException($"Failed to initialize process attribute list.", win32Ex);
+                }
+
+                HANDLE jobHandle = (HANDLE)safeJobHandle.DangerousGetHandle();
+
+                if (!PInvoke.UpdateProcThreadAttribute(
+                    list, 0, PInvoke.PROC_THREAD_ATTRIBUTE_JOB_LIST, &jobHandle, (nuint)sizeof(HANDLE)))
+                {
+                    var errorCode = Marshal.GetLastPInvokeError();
+                    var win32Ex = new Win32Exception(errorCode);
+
+                    _logger.FailedToUpdateAttributeList(_pathWithArgs, errorCode, win32Ex.Message);
+                    throw new Win32ProcessException($"Failed to update process attribute list.", win32Ex);
+                }
+
+                STARTUPINFOEXW siex = new()
+                {
+                    lpAttributeList = list
+                };
+                siex.StartupInfo.cb = (uint)sizeof(STARTUPINFOEXW);
+
+                char[] cmd = (_pathWithArgs + '\0').ToCharArray();
+                Span<char> lpCommandLine = cmd;
+                PROCESS_INFORMATION pi;
+
+                if (!PInvoke.CreateProcess(
+                    null, ref lpCommandLine, null, null, false,
+                    PROCESS_CREATION_FLAGS.EXTENDED_STARTUPINFO_PRESENT,
+                    null, _workingDir, in siex.StartupInfo, out pi))
+                {
+                    var errorCode = Marshal.GetLastPInvokeError();
+                    var win32Ex = new Win32Exception(errorCode);
+
+                    _logger.FailedToCreateProcess(_pathWithArgs, errorCode, win32Ex.Message);
+                    throw new Win32ProcessException($"Failed to create process '{_pathWithArgs}'.", win32Ex);
+                }
+
+                _safeProcHandle = new SafeFileHandle(pi.hProcess, true);
+
+                if (!PInvoke.RegisterWaitForSingleObject(
+                    out _safeWaitHandle, _safeProcHandle, new WAITORTIMERCALLBACK(WaitProc),
+                    &pi, PInvoke.INFINITE, WORKER_THREAD_FLAGS.WT_EXECUTEONLYONCE))
+                {
+                    var errorCode = Marshal.GetLastPInvokeError();
+                    var win32Ex = new Win32Exception(errorCode);
+
+                    _logger.FailedToRegisterWaitOperation(_pathWithArgs, errorCode, win32Ex.Message);
+                    throw new Win32ProcessException($"Failed to register wait operation for process '{_pathWithArgs}'.", win32Ex);
+                }
+            }
+            finally
+            {
+                PInvoke.DeleteProcThreadAttributeList(list);
+                Marshal.FreeHGlobal(listBuffer);
+            }
+        }
+
+        private unsafe void WaitProc(void* context, BOOLEAN TimerOrWaitFired)
+        {
+            uint exitCode;
+            if (!PInvoke.GetExitCodeProcess(_safeProcHandle, out exitCode))
+            {
+                exitCode = 0; // todo: handle function failure differently
+            }
+
+            _logger.ProcessExited(_pathWithArgs, exitCode);
+            Exited?.Invoke(this, new Win32ProcessExitedArgs()
+            {
+                ExitCode = exitCode
+            });
+        }
+
+        private void CleanupWaitHandle()
+        {
+            if (_safeWaitHandle is not null)
+            {
+                // Function can fail, but not doing anything currently if it does.
+                PInvoke.UnregisterWait(_safeWaitHandle);
+
+                _safeWaitHandle.Dispose();
+                _safeWaitHandle = null;
+            }
+        }
+
+        public void Dispose()
+        {
+            CleanupWaitHandle();
+            _safeProcHandle?.Dispose();
+        }
+    }
+}
