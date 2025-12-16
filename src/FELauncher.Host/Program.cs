@@ -9,6 +9,7 @@ using Microsoft.Extensions.Hosting;
 class Program
 {
     [STAThread]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0060:Remove unused parameter")]
     static void Main(string[] args)
     {
         using var mutex = new Mutex(false, HostConstants.MutexName);
@@ -52,7 +53,7 @@ class Program
         builder.Services.ConfigureEngineSettings(builder.Configuration);
         builder.Services.AddEngineServices();
 
-        builder.Services.AddSingleton<ITrayController, TrayController>();
+        builder.Services.AddSingleton<TrayController>();
         builder.Services.AddHostedService<TrayService>();
 
         using IHost host = builder.Build();
