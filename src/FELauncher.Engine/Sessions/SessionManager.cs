@@ -76,21 +76,19 @@ namespace FELauncher.Engine.Sessions
                 /* Pre-hooks */
                 // session.Status = SessionStatus.RunningPreHooks;
 
-                /* Preprocesses */
                 lock (_sessionLock)
                 {
                     _session.Status = SessionStatus.RunningPreProcesses;
                 }
                 await preProcessRunner.RunAsync(sessionSettings.PreProcesses, ct);
 
-                /* Frontend */
                 lock (_sessionLock)
                 {
                     _session.Status = SessionStatus.RunningFrontend;
                 }
                 await frontendRunner.RunAsync(sessionSettings.Frontend, ct);
 
-                /* Wait for all processes to exit naturally. */
+                // Wait for all processes to exit naturally.
                 await jobObjectManager.WaitForJobObjectCompletionAsync(ct);
 
                 /* Post-hooks */
