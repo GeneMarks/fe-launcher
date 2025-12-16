@@ -1,6 +1,8 @@
-﻿using System.Diagnostics;
-
-namespace FELauncher.Engine.Processes
+﻿namespace FELauncher.Engine.Processes
 {
-    internal abstract record FELProcess(Process Process) { }
+    public sealed record FELProcess(
+        Win32Process Process,
+        int DelaySeconds,
+        bool NotifyOnExit,
+        bool EndSessionOnExit) { }
 }

@@ -1,111 +1,35 @@
-﻿using FELauncher.Engine.Sessions;
-using FELauncher.Engine.Settings;
+﻿using FELauncher.Engine.Settings;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using System.Diagnostics;
 
 namespace FELauncher.Engine.Processes
 {
-    internal sealed class PreProcessRunner : IPreProcessRunner
+    internal sealed class PreProcessRunner(
+        ILogger<PreProcessRunner> logger,
+        IProcessFactory factory,
+        IProcessManager processManager) : IPreProcessRunner
     {
-        public event EventHandler<PreProcessExitedEventArgs>? PreProcessExited;
-
-        private readonly List<FELPreProcess> _running = [];
-        private readonly IList<PreProcessSettings>? _preProcessSettings;
-
-        private readonly ILogger<PreProcessRunner> _logger;
-        private readonly IOptionsSnapshot<FELauncherSettings> _settings;
-        private readonly IProcessFactory _factory;
-        private readonly IJobObjectManager _jobObjectManager;
-
-        public PreProcessRunner(
-            ILogger<PreProcessRunner> logger,
-            IOptionsSnapshot<FELauncherSettings> settings,
-            IProcessFactory factory,
-            IJobObjectManager jobObjectManager)
+        public async Task RunAsync(IList<PreProcessSettings> preProcessSettings, CancellationToken ct = default)
         {
-            _logger = logger;
-            _settings = settings;
-            _factory = factory;
-            _jobObjectManager = jobObjectManager;
-
-            _preProcessSettings = _settings.Value.PreProcesses;
-        }
-
-        public async Task RunAsync()
-        {
-            if (_preProcessSettings is null
-             || _preProcessSettings.Count == 0) return;
-
-            var felPreProcesses = CreateFELPreProcesses();
-            _running.AddRange(felPreProcesses);
-            
-            foreach (var felPreProcess in felPreProcesses)
+            if (preProcessSettings.Count == 0)
             {
-                var proc = felPreProcess.Process;
-
-                proc.Exited += OnProcessExited;
-
-                var delayTime = TimeSpan.FromSeconds(felPreProcess.DelaySeconds);
-                if (delayTime > TimeSpan.Zero)
-                {
-                    await Task.Delay(delayTime);
-                }
-
-                proc.Start();
-                // Theoretical race condition here where process immediately terminates
-                // or spawns children before job object assigment.
-                //
-                // Monitor real-world impact.
-                _jobObjectManager.AssignToJobObject(proc);
+                // todo: log here?
+                return;
             }
-        }
 
-        private List<FELPreProcess> CreateFELPreProcesses()
-        {
-            var processes = new List<FELPreProcess>();
-            foreach (var preProcess in _preProcessSettings!)
+            foreach (var preProcess in preProcessSettings)
             {
-                var process = _factory.Create(preProcess.Path, preProcess.Arguments);
+                ct.ThrowIfCancellationRequested();
 
-                var felPreProcess = new FELPreProcess(
+                var process = factory.Create(preProcess.Path, preProcess.Arguments);
+
+                var felPreProcess = new FELProcess(
                     process,
                     preProcess.DelaySeconds,
                     preProcess.NotifyOnExit,
                     preProcess.EndSessionOnExit);
 
-                processes.Add(felPreProcess);
+                await processManager.StartAndTrackAsync(felPreProcess, ct);
             }
-
-            return processes;
-        }
-
-        private void OnProcessExited(object? sender, EventArgs e)
-        {
-            if (_running.Count == 0) return;
-
-            var proc = (Process)sender!;
-
-            var felPreProcess = _running.Find((p) => p.Process == proc);
-            if (felPreProcess is null) return;
-
-            int exitCode;
-            try
-            {
-                exitCode = proc.ExitCode;
-            }
-            catch
-            {
-                exitCode = -1;
-            }
-
-            _running.Remove(felPreProcess);
-            PreProcessExited?.Invoke(this, new PreProcessExitedEventArgs
-            {
-                ExitCode         = exitCode,
-                NotifyOnExit     = felPreProcess.NotifyOnExit,
-                EndSessionOnExit = felPreProcess.EndSessionOnExit
-            });
         }
     }
 }
