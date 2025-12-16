@@ -5,22 +5,19 @@ using Windows.Win32.UI.WindowsAndMessaging;
 
 namespace FELauncher.Host.Tray
 {
-    internal class TrayWindowHost : IDisposable
+    internal sealed class TrayWindowHost(TrayController controller) : IDisposable
     {
-        private readonly ITrayController _controller;
         private TrayIcon? _notifyIcon;
         private HWND _hWnd;
         private const uint WM_TRAYICON = 0x800;
         private const string ClassName = "FELauncherTrayWnd";
         private IntPtr _classNamePtr;
 
-        public TrayWindowHost(ITrayController controller)
-        {
-            _controller = controller;
-        }
-
-        /* Must be executed on separate thread.
-           Message loop is blocking. */
+        /// <summary>
+        /// Must be executed on separate thread.
+        /// <br />
+        /// Message loop is blocking.
+        /// </summary>
         public void Run()
         {
             _classNamePtr = Marshal.StringToHGlobalUni(ClassName);
@@ -57,7 +54,7 @@ namespace FELauncher.Host.Tray
             PInvoke.RegisterClassEx(wc);
         }
         
-        private unsafe HWND CreateMessageWindow()
+        private static unsafe HWND CreateMessageWindow()
         {
             return PInvoke.CreateWindowEx(
                 0,
@@ -95,11 +92,11 @@ namespace FELauncher.Host.Tray
                     switch (code)
                     {
                         case PInvoke.WM_LBUTTONDBLCLK:
-                            _controller.LaunchFrontend();
+                            controller.LaunchFrontend();
                             break;
 
                         case PInvoke.WM_RBUTTONUP:
-                            TrayMenu.ShowMenu(hWnd, _controller);
+                            TrayMenu.ShowMenu(hWnd, controller);
                             break;
                     }
                     break;
