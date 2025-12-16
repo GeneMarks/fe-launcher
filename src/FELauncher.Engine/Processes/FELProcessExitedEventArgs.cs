@@ -1,6 +1,6 @@
 ﻿namespace FELauncher.Engine.Processes
 {
-    public sealed class ProcessExitedEventArgs : EventArgs
+    internal sealed class FELProcessExitedEventArgs : EventArgs
     {
         public bool NotifyOnExit { get; init; }
         public bool EndSessionOnExit { get; init; }

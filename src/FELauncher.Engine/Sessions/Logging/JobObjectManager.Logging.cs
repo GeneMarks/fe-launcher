@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 
-namespace FELauncher.Engine.Sessions
+namespace FELauncher.Engine.Sessions.Logging
 {
     internal static partial class JobObjectManagerLogging
     {

@@ -3,11 +3,11 @@ using Microsoft.Extensions.Logging;
 
 namespace FELauncher.Engine.Processes
 {
-    internal sealed class ProcessManager(
-        ILogger<ProcessManager> logger,
-        IJobObjectManager jobObjectManager) : IProcessManager
+    internal sealed class FELProcessManager(
+        ILogger<FELProcessManager> logger,
+        JobObjectManager jobObjectManager)
     {
-        public event EventHandler<ProcessExitedEventArgs>? ProcessExited;
+        public event EventHandler<FELProcessExitedEventArgs>? FELProcessExited;
 
         private readonly List<FELProcess> _running = [];
 
@@ -40,7 +40,7 @@ namespace FELauncher.Engine.Processes
             if (felProcess is null) return;
 
             _running.Remove(felProcess);
-            ProcessExited?.Invoke(this, new ProcessExitedEventArgs
+            FELProcessExited?.Invoke(this, new FELProcessExitedEventArgs
             {
                 NotifyOnExit     = felProcess.NotifyOnExit,
                 EndSessionOnExit = felProcess.EndSessionOnExit

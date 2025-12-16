@@ -6,13 +6,13 @@ using Microsoft.Extensions.Options;
 
 namespace FELauncher.Engine.Sessions
 {
-    public sealed class SessionManager(
+    internal sealed class SessionManager(
         ILogger<SessionManager> logger,
         IOptionsMonitor<FELauncherSettings> settings,
-        IJobObjectManager jobObjectManager,
-        IProcessManager processManager,
-        IPreProcessRunner preProcessRunner,
-        IFrontendRunner frontendRunner) : ISessionManager
+        JobObjectManager jobObjectManager,
+        FELProcessManager processManager,
+        PreProcessRunner preProcessRunner,
+        FrontendRunner frontendRunner) : ISessionManager
     {
         private Session? _session;
         private CancellationTokenSource? _cancellationTokenSource;
@@ -71,7 +71,7 @@ namespace FELauncher.Engine.Sessions
                 FELauncherSettings sessionSettings = settings.CurrentValue;
 
                 jobObjectManager.ResetJobObject();
-                processManager.ProcessExited += OnProcessExited;
+                processManager.FELProcessExited += OnFELProcessExited;
 
                 /* Pre-hooks */
                 // session.Status = SessionStatus.RunningPreHooks;
@@ -111,7 +111,7 @@ namespace FELauncher.Engine.Sessions
                 // cancel session run
                 // toast here
             }
-            catch (ProcessCreationException ex)
+            catch (Win32ProcessCreationException ex)
             {
                 // cancel session run
                 // toast here
@@ -128,7 +128,7 @@ namespace FELauncher.Engine.Sessions
             }
         }
 
-        private void OnProcessExited(object? sender, ProcessExitedEventArgs e)
+        private void OnFELProcessExited(object? sender, FELProcessExitedEventArgs e)
         {
 
         }

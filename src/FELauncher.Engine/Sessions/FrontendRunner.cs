@@ -1,12 +1,13 @@
-﻿using FELauncher.Engine.Settings;
+﻿using FELauncher.Engine.Processes;
+using FELauncher.Engine.Settings;
 using Microsoft.Extensions.Logging;
 
-namespace FELauncher.Engine.Processes
+namespace FELauncher.Engine.Sessions
 {
     internal sealed class FrontendRunner(
         ILogger<FrontendRunner> logger,
-        IProcessFactory factory,
-        IProcessManager processManager) : IFrontendRunner
+        Win32ProcessFactory factory,
+        FELProcessManager processManager)
     {
         public async Task RunAsync(FrontendSettings frontendSettings, CancellationToken ct = default)
         {

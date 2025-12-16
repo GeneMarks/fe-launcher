@@ -1,11 +1,16 @@
+using FELauncher.Engine.IO.Logging;
 using Microsoft.Extensions.Logging;
 
 namespace FELauncher.Engine.IO
 {
-	internal sealed class PathResolver(ILogger<PathResolver> logger) : IPathResolver
+	internal sealed class PathResolver(ILogger<PathResolver> logger)
 	{
         private readonly string _basePath = AppContext.BaseDirectory;
 
+		/// <summary>
+		/// If path is relative, add application directory to base.
+		/// Return resolved absolute path.
+		/// </summary>
         public string ResolvePath(string? path)
 		{
 			if (string.IsNullOrEmpty(path))
@@ -26,7 +31,7 @@ namespace FELauncher.Engine.IO
 			return resolvedPath;
 		}
 
-		public bool IsAbsolute(string path)
+		public static bool IsAbsolute(string path)
 			=> Path.IsPathFullyQualified(path);
 	}
 }

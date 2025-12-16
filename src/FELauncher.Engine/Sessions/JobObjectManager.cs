@@ -1,4 +1,5 @@
 ﻿using FELauncher.Engine.Exceptions;
+using FELauncher.Engine.Sessions.Logging;
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32.SafeHandles;
 using System.ComponentModel;
@@ -9,11 +10,23 @@ using Windows.Win32.System.JobObjects;
 
 namespace FELauncher.Engine.Sessions
 {
-    internal sealed class JobObjectManager(ILogger<JobObjectManager> logger) : IJobObjectManager, IDisposable
+    /// <summary>
+    /// Manages the creation, termination, and lifetime of a win32 job object.
+    /// </summary>
+    internal sealed class JobObjectManager(ILogger<JobObjectManager> logger) : IDisposable
     {
         private SafeFileHandle? _safeJobHandle;
         private SafeFileHandle? _safeCompletionPortHandle;
 
+        /// <summary>
+        /// Gets the safe handle for the currently active job object.
+        /// </summary>
+        /// <remarks>
+        /// The job object must be initialized (via <see cref="ResetJobObject"/>) before accessing this property.
+        /// </remarks>
+        /// <exception cref="JobObjectException">
+        /// Thrown when the job object has not been initialized or the underlying handle is invalid.
+        /// </exception>
         public SafeFileHandle SafeJobHandle
         {
             get
@@ -28,12 +41,31 @@ namespace FELauncher.Engine.Sessions
             }
         }
 
+        /// <summary>
+        /// Closes and releases the manager's existing job object and assigns a new one.
+        /// </summary>
+        /// <exception cref="JobObjectException">Thrown when job object creation fails due to a Win32 error.</exception>
         public void ResetJobObject()
         {
             ReleaseJobObject();
             _safeJobHandle = CreateJobObject();
         }
 
+        /// <summary>
+        /// Asynchronously waits until the current job object has no remaining active processes.
+        /// </summary>
+        /// <remarks>
+        /// Internally sets up an I/O completion port for the job object and blocks on completion status on a background thread.
+        /// </remarks>
+        /// <returns>
+        /// A task that completes when there are no more active processes in the current job object.
+        /// </returns>
+        /// <exception cref="JobObjectException">
+        /// Thrown when the job object has not been initialized, the handle is invalid, or completion-port setup fails due to a Win32 error.
+        /// </exception>
+        /// <exception cref="OperationCanceledException">
+        /// Thrown when <paramref name="ct"/> is canceled while waiting.
+        /// </exception>
         public async Task WaitForJobObjectCompletionAsync(CancellationToken ct)
         {
             if (_safeJobHandle is null || _safeJobHandle.IsInvalid)
@@ -54,6 +86,10 @@ namespace FELauncher.Engine.Sessions
             }
         }
 
+        /// <summary>
+        /// Terminates the current job object if it is valid.
+        /// </summary>
+        /// <exception cref="JobObjectException">Thrown when job object termination fails due to a Win32Error.</exception>
         public void TerminateJobObject()
         {
             if (_safeJobHandle is null || _safeJobHandle.IsInvalid)
@@ -122,11 +158,8 @@ namespace FELauncher.Engine.Sessions
             }
         }
 
-        /// <summary>
-        /// Must be executed on separate thread.
-        /// <br />
-        /// Queued completion status loop is blocking.
-        /// </summary>
+        // Must be executed on separate thread.
+        // Queued completion status loop is blocking.
         private unsafe void WaitForCompletionStatus(CancellationToken ct)
         {
             using var reg = ct.Register(() =>

@@ -1,6 +1,6 @@
 ﻿namespace FELauncher.Engine.Processes
 {
-    public sealed class Win32ProcessExitedArgs : EventArgs
+    internal sealed class Win32ProcessExitedEventArgs : EventArgs
     {
         public uint ExitCode { get; init; }
     }

@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 
-namespace FELauncher.Engine.Processes
+namespace FELauncher.Engine.Processes.Logging
 {
     internal static partial class Win32ProcessLogging
     {

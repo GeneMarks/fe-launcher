@@ -1,4 +1,5 @@
 ﻿using FELauncher.Engine.Exceptions;
+using FELauncher.Engine.Processes.Logging;
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32.SafeHandles;
 using System.ComponentModel;
@@ -9,9 +10,9 @@ using Windows.Win32.System.Threading;
 
 namespace FELauncher.Engine.Processes
 {
-    public sealed class Win32Process : IDisposable
+    internal sealed class Win32Process : IDisposable
     {
-        public event EventHandler<Win32ProcessExitedArgs>? Exited;
+        public event EventHandler<Win32ProcessExitedEventArgs>? Exited;
 
         private readonly ILogger<Win32Process> _logger;
 
@@ -30,6 +31,13 @@ namespace FELauncher.Engine.Processes
             _workingDir = workingDir;
         }
 
+        /// <summary>
+        /// Creates a native windows process in the provided job handle and registers a wait callback.
+        /// </summary>
+        /// <param name="safeJobHandle">Handle to a job object the process will be assigned to.</param>
+        /// <exception cref="Win32ProcessException">
+        /// Thrown when process creation or wait registration fails due to a Win32 error.
+        /// </exception>
         public unsafe void StartInJob(SafeFileHandle safeJobHandle)
         {
             nuint size = 0;
@@ -37,7 +45,7 @@ namespace FELauncher.Engine.Processes
             // Errors intentionally. Function return will always be zero.
             PInvoke.InitializeProcThreadAttributeList(LPPROC_THREAD_ATTRIBUTE_LIST.Null, 1, 0, &size);
 
-            IntPtr listBuffer = Marshal.AllocHGlobal((nint)size);
+            nint listBuffer = Marshal.AllocHGlobal((nint)size);
             var list = (LPPROC_THREAD_ATTRIBUTE_LIST)listBuffer;
 
             try
@@ -114,7 +122,7 @@ namespace FELauncher.Engine.Processes
             }
 
             _logger.ProcessExited(_pathWithArgs, exitCode);
-            Exited?.Invoke(this, new Win32ProcessExitedArgs()
+            Exited?.Invoke(this, new Win32ProcessExitedEventArgs()
             {
                 ExitCode = exitCode
             });

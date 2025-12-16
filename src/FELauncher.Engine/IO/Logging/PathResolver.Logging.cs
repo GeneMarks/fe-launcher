@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 
-namespace FELauncher.Engine.IO
+namespace FELauncher.Engine.IO.Logging
 {
     internal static partial class PathResolverLogging
     {

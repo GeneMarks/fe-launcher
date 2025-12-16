@@ -1,6 +1,6 @@
 ﻿namespace FELauncher.Engine.Processes
 {
-    public sealed record FELProcess(
+    internal sealed record FELProcess(
         Win32Process Process,
         int DelaySeconds,
         bool NotifyOnExit,

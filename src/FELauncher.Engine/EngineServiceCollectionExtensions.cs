@@ -15,12 +15,12 @@ namespace FELauncher.Engine
             services.AddSingleton<ISessionManager, SessionManager>();
 
             // Internal services
-            services.AddSingleton<IPathResolver, PathResolver>();
-            services.AddSingleton<IProcessFactory, ProcessFactory>();
-            services.AddSingleton<IProcessManager, ProcessManager>();
-            services.AddSingleton<IJobObjectManager, JobObjectManager>();
-            services.AddSingleton<IPreProcessRunner, PreProcessRunner>();
-            services.AddSingleton<IFrontendRunner, FrontendRunner>();
+            services.AddSingleton<PathResolver>();
+            services.AddSingleton<Win32ProcessFactory>();
+            services.AddSingleton<FELProcessManager>();
+            services.AddSingleton<JobObjectManager>();
+            services.AddSingleton<PreProcessRunner>();
+            services.AddSingleton<FrontendRunner>();
 
             return services;
         }
