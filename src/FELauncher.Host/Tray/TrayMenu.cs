@@ -73,30 +73,24 @@ namespace FELauncher.Host.Tray
         {
             switch ((nuint)choice)
             {
-                // Launch
                 case Items.Launch:
                     controller.LaunchFrontend();
                     break;
 
-                // End session
                 case Items.EndSession:
                     controller.EndSession();
                     break;
 
-                // Install dependencies
                 case Items.InstallDependencies:
                     break;
 
-                // Options
                 case Items.Options:
                     break;
 
-                // Check updates
                 case Items.CheckUpdates:
                     TrayController.CheckUpdates();
                     break;
 
-                // Exit
                 case Items.Exit:
                     controller.Exit();
                     break;
