@@ -13,11 +13,8 @@ namespace FELauncher.Host.Tray
         private const string ClassName = "FELauncherTrayWnd";
         private IntPtr _classNamePtr;
 
-        /// <summary>
-        /// Must be executed on separate thread.
-        /// <br />
-        /// Message loop is blocking.
-        /// </summary>
+        // Must be executed on separate thread.
+        // Message loop is blocking.
         public void Run()
         {
             _classNamePtr = Marshal.StringToHGlobalUni(ClassName);
