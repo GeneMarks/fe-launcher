@@ -7,14 +7,14 @@ using Windows.Win32.UI.WindowsAndMessaging;
 
 namespace FELauncher.Host.Tray
 {
-    internal class TrayIcon : IDisposable
+    internal sealed class TrayIcon : IDisposable
     {
         private readonly HICON _hIcon;
         private readonly NOTIFYICONDATAW _iconData;
 
         public TrayIcon(HWND hWnd, uint callbackMsg)
         {
-            _hIcon = LoadEmbeddedIcon("FELauncher.Host.Assets.win_ico_16.ico");
+            _hIcon = LoadEmbeddedIcon(HostConstants.EmbeddedIcon);
 
             unsafe
             {
@@ -24,19 +24,19 @@ namespace FELauncher.Host.Tray
                 _iconData.uCallbackMessage   = callbackMsg;
                 _iconData.hIcon              = _hIcon;
                 _iconData.szTip              = "FE Launcher";
-                _iconData.Anonymous.uVersion = 3; // todo: upgrade to v4
+                _iconData.Anonymous.uVersion = 3; // todo: upgrade to v4?
                 _iconData.uFlags             = NOTIFY_ICON_DATA_FLAGS.NIF_MESSAGE
                                              | NOTIFY_ICON_DATA_FLAGS.NIF_ICON
                                              | NOTIFY_ICON_DATA_FLAGS.NIF_TIP;
             }
         }
 
-        private HICON LoadEmbeddedIcon(string resourceName)
+        private static HICON LoadEmbeddedIcon(string resourceName)
         {
             var assembly = Assembly.GetExecutingAssembly();
             using var stream = assembly.GetManifestResourceStream(resourceName);
 
-            Icon icon = new Icon(stream);
+            Icon icon = new Icon(stream!);
 
             HICON hicon = (HICON)icon.Handle;
             return PInvoke.CopyIcon(hicon);
