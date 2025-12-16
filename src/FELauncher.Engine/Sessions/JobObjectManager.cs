@@ -122,6 +122,11 @@ namespace FELauncher.Engine.Sessions
             }
         }
 
+        /// <summary>
+        /// Must be executed on separate thread.
+        /// <br />
+        /// Queued completion status loop is blocking.
+        /// </summary>
         private unsafe void WaitForCompletionStatus(CancellationToken ct)
         {
             using var reg = ct.Register(() =>
