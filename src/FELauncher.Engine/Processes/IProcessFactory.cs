@@ -6,7 +6,7 @@
     internal interface IProcessFactory
     {
         /// <summary>
-        /// Create a win32 process based on the provided path and arguments.
+        /// Creates a win32 process based on the provided path and arguments.
         /// <br />
         /// Verifies that the provided path is valid before creation.
         /// <br /><br />
