@@ -35,6 +35,7 @@ namespace FELauncher.Engine.Processes
             if (_running.Count == 0) return;
 
             var proc = (Win32Process)sender!;
+            proc.Exited -= OnProcessExited;
 
             var felProcess = _running.Find((p) => p.Process == proc);
             if (felProcess is null) return;
