@@ -7,10 +7,11 @@ namespace FELauncher.Engine.IO
 	{
         private readonly string _basePath = AppContext.BaseDirectory;
 
+		
 		/// <summary>
-		/// If path is relative, add application directory to base.
-		/// Return resolved absolute path.
+		/// Resolves relative paths by adding application directory to base.
 		/// </summary>
+		/// <returns>A resolved absolute path.</returns>
         public string ResolvePath(string? path)
 		{
 			if (string.IsNullOrEmpty(path))

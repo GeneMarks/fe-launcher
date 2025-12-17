@@ -11,7 +11,7 @@ using Windows.Win32.System.JobObjects;
 namespace FELauncher.Engine.Sessions
 {
     /// <summary>
-    /// Manages the creation, termination, and lifetime of a win32 job object.
+    /// Manages the creation, termination, and lifetime of a Win32 job object.
     /// </summary>
     internal sealed class JobObjectManager(ILogger<JobObjectManager> logger) : IDisposable
     {
