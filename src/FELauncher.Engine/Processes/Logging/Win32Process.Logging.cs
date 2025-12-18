@@ -6,27 +6,27 @@ namespace FELauncher.Engine.Processes.Logging
     {
         [LoggerMessage(
             Level = LogLevel.Error,
-            Message = "Failed to initialize process attribute list for process '{Process}'. Win32Error: {Win32ErrorCode} ({Win32Message})")]
-        public static partial void FailedToInitializeAttributeList(this ILogger logger, string process, int win32ErrorCode, string win32Message);
+            Message = "Failed to initialize process attribute list for process with path '{ProcessPath}'. Win32Error: {Win32ErrorCode}")]
+        public static partial void FailedToInitializeAttributeList(this ILogger logger, string processPath, int win32ErrorCode, Exception ex);
 
         [LoggerMessage(
             Level = LogLevel.Error,
-            Message = "Failed to update process attribute list for process '{Process}'. Win32Error: {Win32ErrorCode} ({Win32Message})")]
-        public static partial void FailedToUpdateAttributeList(this ILogger logger, string process, int win32ErrorCode, string win32Message);
+            Message = "Failed to update process attribute list for process with path '{ProcessPath}'. Win32Error: {Win32ErrorCode}")]
+        public static partial void FailedToUpdateAttributeList(this ILogger logger, string processPath, int win32ErrorCode, Exception ex);
 
         [LoggerMessage(
             Level = LogLevel.Error,
-            Message = "Failed to create process '{Process}'. Win32Error: {Win32ErrorCode} ({Win32Message})")]
-        public static partial void FailedToCreateProcess(this ILogger logger, string process, int win32ErrorCode, string win32Message);
+            Message = "Failed to create process with path '{ProcessPath}'. Win32Error: {Win32ErrorCode}")]
+        public static partial void FailedToCreateProcess(this ILogger logger, string processPath, int win32ErrorCode, Exception ex);
 
         [LoggerMessage(
             Level = LogLevel.Error,
-            Message = "Failed to register wait operation for process '{Process}'. Win32Error: {Win32ErrorCode} ({Win32Message})")]
-        public static partial void FailedToRegisterWaitOperation(this ILogger logger, string process, int win32ErrorCode, string win32Message);
+            Message = "Failed to register wait operation for pid {ProcessId} ({ProcessPath}). Win32Error: {Win32ErrorCode}")]
+        public static partial void FailedToRegisterWaitOperation(this ILogger logger, uint processId, string processPath, int win32ErrorCode, Exception ex);
 
         [LoggerMessage(
             Level = LogLevel.Information,
-            Message = "Process '{Process}' exited with the exit code: {ExitCode}.)")]
-        public static partial void ProcessExited(this ILogger logger, string process, uint exitCode);
+            Message = "Pid {ProcessId} ({ProcessPath}) exited with exit code: {ExitCode}.")]
+        public static partial void ProcessExited(this ILogger logger, uint processId, string processPath, uint exitCode);
     }
 }

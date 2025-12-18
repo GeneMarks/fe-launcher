@@ -20,6 +20,7 @@ namespace FELauncher.Engine.Processes
         private readonly string? _workingDir;
         private SafeFileHandle? _safeProcHandle;
         private SafeFileHandle? _safeWaitHandle;
+        private uint _pid;
 
         public Win32Process(
             ILogger<Win32Process> logger,
@@ -40,7 +41,7 @@ namespace FELauncher.Engine.Processes
         /// </exception>
         public unsafe void StartInJob(SafeFileHandle safeJobHandle)
         {
-            nuint size = 0;
+            nuint size;
             // First call used to assign size.
             // Errors intentionally. Function return will always be zero.
             _ = PInvoke.InitializeProcThreadAttributeList(LPPROC_THREAD_ATTRIBUTE_LIST.Null, 1, 0, &size);
@@ -55,8 +56,8 @@ namespace FELauncher.Engine.Processes
                     var errorCode = Marshal.GetLastPInvokeError();
                     var win32Ex = new Win32Exception(errorCode);
 
-                    _logger.FailedToInitializeAttributeList(_pathWithArgs, errorCode, win32Ex.Message);
-                    throw new Win32ProcessException($"Failed to initialize process attribute list.", win32Ex);
+                    _logger.FailedToInitializeAttributeList(_pathWithArgs, errorCode, win32Ex);
+                    throw new Win32ProcessException($"Failed to initialize process attribute list for process with path '{_pathWithArgs}'.", win32Ex);
                 }
 
                 HANDLE jobHandle = (HANDLE)safeJobHandle.DangerousGetHandle();
@@ -67,8 +68,8 @@ namespace FELauncher.Engine.Processes
                     var errorCode = Marshal.GetLastPInvokeError();
                     var win32Ex = new Win32Exception(errorCode);
 
-                    _logger.FailedToUpdateAttributeList(_pathWithArgs, errorCode, win32Ex.Message);
-                    throw new Win32ProcessException($"Failed to update process attribute list.", win32Ex);
+                    _logger.FailedToUpdateAttributeList(_pathWithArgs, errorCode, win32Ex);
+                    throw new Win32ProcessException($"Failed to update process attribute list for process with path '{_pathWithArgs}'.", win32Ex);
                 }
 
                 STARTUPINFOEXW siex = new()
@@ -89,11 +90,12 @@ namespace FELauncher.Engine.Processes
                     var errorCode = Marshal.GetLastPInvokeError();
                     var win32Ex = new Win32Exception(errorCode);
 
-                    _logger.FailedToCreateProcess(_pathWithArgs, errorCode, win32Ex.Message);
-                    throw new Win32ProcessException($"Failed to create process '{_pathWithArgs}'.", win32Ex);
+                    _logger.FailedToCreateProcess(_pathWithArgs, errorCode, win32Ex);
+                    throw new Win32ProcessException($"Failed to create process with path '{_pathWithArgs}'.", win32Ex);
                 }
 
                 _safeProcHandle = new SafeFileHandle(pi.hProcess, true);
+                _pid = PInvoke.GetProcessId(_safeProcHandle);
 
                 if (!PInvoke.RegisterWaitForSingleObject(
                     out _safeWaitHandle, _safeProcHandle, new WAITORTIMERCALLBACK(WaitProc),
@@ -102,8 +104,8 @@ namespace FELauncher.Engine.Processes
                     var errorCode = Marshal.GetLastPInvokeError();
                     var win32Ex = new Win32Exception(errorCode);
 
-                    _logger.FailedToRegisterWaitOperation(_pathWithArgs, errorCode, win32Ex.Message);
-                    throw new Win32ProcessException($"Failed to register wait operation for process '{_pathWithArgs}'.", win32Ex);
+                    _logger.FailedToRegisterWaitOperation(_pid, _pathWithArgs, errorCode, win32Ex);
+                    throw new Win32ProcessException($"Failed to register wait operation for pid {_pid} ({_pathWithArgs}).", win32Ex);
                 }
             }
             finally
@@ -121,10 +123,11 @@ namespace FELauncher.Engine.Processes
                 exitCode = 0; // todo: handle function failure differently
             }
 
-            _logger.ProcessExited(_pathWithArgs, exitCode);
+            _logger.ProcessExited(_pid, _pathWithArgs, exitCode);
             Exited?.Invoke(this, new Win32ProcessExitedEventArgs()
             {
-                ExitCode = exitCode
+                ExitCode = exitCode,
+                ProcessId = _pid
             });
         }
 
