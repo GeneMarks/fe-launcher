@@ -17,18 +17,18 @@ namespace FELauncher.Host.Tray
             public const nuint Exit                = 1050;
         }
 
-        public static void ShowMenu(HWND hWnd, TrayController controller)
+        public static void ShowMenu(HWND windowHandle, TrayController controller)
         {
             Point pt;
             PInvoke.GetCursorPos(out pt);
 
             using var menu = PInvoke.CreatePopupMenu_SafeHandle();
 
-            PopulateMenu(menu, controller.IsSessionActive);
+            PopulateMenu(menu, controller.IsSessionActive, controller.CanEndSession);
 
             // Foreground must be set to current HWND,
             // otherwise menu doesn't close when clicking outside it.
-            PInvoke.SetForegroundWindow(hWnd);
+            _ = PInvoke.SetForegroundWindow(windowHandle);
 
             int choice = PInvoke.TrackPopupMenuEx(
                 menu,
@@ -37,17 +37,21 @@ namespace FELauncher.Host.Tray
               | (uint)TRACK_POPUP_MENU_FLAGS.TPM_RETURNCMD,
                 pt.X,
                 pt.Y,
-                hWnd,
+                windowHandle,
                 null);
 
             HandleMenuChoice(choice, controller);
         }
 
-        private static void PopulateMenu(DestroyMenuSafeHandle menu, bool isSessionActive)
+        private static void PopulateMenu(
+            DestroyMenuSafeHandle menu,
+            bool isSessionActive,
+            bool canEndSession)
         {
             AppendMenuItem(menu,
                 isSessionActive ? Items.EndSession : Items.Launch,
-                isSessionActive ? "End session" : "Launch");
+                isSessionActive ? "End session" : "Launch",
+                disabled: isSessionActive && !canEndSession);
             AppendMenuItem(menu);
             AppendMenuItem(menu, Items.InstallDependencies, "Install dependencies", isSessionActive);
             AppendMenuItem(menu, Items.Options, "Options", isSessionActive);
@@ -61,12 +65,12 @@ namespace FELauncher.Host.Tray
             nuint id, string label, bool disabled = false)
         {
             var flags = MENU_ITEM_FLAGS.MF_STRING | (disabled ? MENU_ITEM_FLAGS.MF_DISABLED : 0);
-            PInvoke.AppendMenu( menu, flags, id, label);
+            _ = PInvoke.AppendMenu( menu, flags, id, label);
         }
         
         private static void AppendMenuItem(DestroyMenuSafeHandle menu)
         {
-            PInvoke.AppendMenu(menu, MENU_ITEM_FLAGS.MF_SEPARATOR, 0, null);
+            _ = PInvoke.AppendMenu(menu, MENU_ITEM_FLAGS.MF_SEPARATOR, 0, null);
         }
 
         private static void HandleMenuChoice(int choice, TrayController controller)
