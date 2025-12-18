@@ -15,7 +15,7 @@ namespace FELauncher.Engine.Sessions
         FrontendRunner frontendRunner) : ISessionManager
     {
         private Session? _session;
-        private CancellationTokenSource? _cancellationTokenSource;
+        private CancellationTokenSource? _sessionCts;
         private readonly Lock _sessionLock = new();
 
         public bool IsSessionActive
@@ -29,25 +29,18 @@ namespace FELauncher.Engine.Sessions
             }
         }
 
-        public CancellationTokenSource CancellationTokenSource
+        public bool CanEndSession
         {
             get
             {
                 lock (_sessionLock)
                 {
-                    if (_session?.IsActive == true && _cancellationTokenSource is not null)
-                    {
-                        return _cancellationTokenSource;
-                    }
-
-                    _cancellationTokenSource?.Dispose();
-                    _cancellationTokenSource = new CancellationTokenSource();
-                    return _cancellationTokenSource;
+                    return _session?.CanRequestStop == true;
                 }
             }
         }
 
-        public async Task StartNewSessionAsync(CancellationToken ct = default)
+        public async Task StartNewSessionAsync()
         {
             lock (_sessionLock)
             {
@@ -62,12 +55,14 @@ namespace FELauncher.Engine.Sessions
                 {
                     Status = SessionStatus.Starting
                 };
+
+                _sessionCts = new CancellationTokenSource();
             }
+
+            var ct = _sessionCts.Token;
 
             try
             {
-                ct.ThrowIfCancellationRequested();
-
                 FELauncherSettings sessionSettings = settings.CurrentValue;
 
                 jobObjectManager.ResetJobObject();
@@ -99,8 +94,9 @@ namespace FELauncher.Engine.Sessions
                     _session.Status = SessionStatus.Completed;
                 }
             }
-            catch (OperationCanceledException ex) when (ct.IsCancellationRequested)
+            catch (OperationCanceledException) when (ct.IsCancellationRequested)
             {
+                await StopSessionAsync();
                 lock (_sessionLock)
                 {
                     _session.Status = SessionStatus.Aborted;
@@ -110,27 +106,76 @@ namespace FELauncher.Engine.Sessions
             {
                 // cancel session run
                 // toast here
+                lock (_sessionLock)
+                {
+                    _session.Status = SessionStatus.Failed;
+                }
             }
             catch (Win32ProcessCreationException ex)
             {
                 // cancel session run
                 // toast here
+                lock (_sessionLock)
+                {
+                    _session.Status = SessionStatus.Failed;
+                }
             }
             catch (Exception ex)
             {
                 // cancel session run
                 // log unknown session
                 // toast here
+                lock (_sessionLock)
+                {
+                    _session.Status = SessionStatus.Failed;
+                }
             }
             finally
             {
-
+                _sessionCts.Dispose();
+                _sessionCts = null;
             }
+        }
+
+        public void RequestEndSession()
+        {
+            lock (_sessionLock)
+            {
+                if (_session?.CanRequestStop != true) return;
+                _sessionCts?.Cancel();
+            }
+        }
+
+        private async Task StopSessionAsync()
+        {
+            lock (_sessionLock)
+            {
+                if (_session is null)
+                {
+                    // log here
+                    return;
+                }
+
+                if (!_session.CanRequestStop)
+                {
+                    // log here
+                    return;
+                }
+
+                _session.Status = SessionStatus.Stopping;
+            }
+
+            await jobObjectManager.AttemptCloseWindowsInJobAsync(1);
+            try
+            {
+                jobObjectManager.TerminateJobObject();
+            }
+            catch { /* Maybe do something here */ }
         }
 
         private void OnFELProcessExited(object? sender, FELProcessExitedEventArgs e)
         {
-
+            //if (e.EndSessionOnExit) RequestEndSession();
         }
     }
 }
