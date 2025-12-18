@@ -43,7 +43,7 @@ namespace FELauncher.Engine.Processes
             nuint size = 0;
             // First call used to assign size.
             // Errors intentionally. Function return will always be zero.
-            PInvoke.InitializeProcThreadAttributeList(LPPROC_THREAD_ATTRIBUTE_LIST.Null, 1, 0, &size);
+            _ = PInvoke.InitializeProcThreadAttributeList(LPPROC_THREAD_ATTRIBUTE_LIST.Null, 1, 0, &size);
 
             nint listBuffer = Marshal.AllocHGlobal((nint)size);
             var list = (LPPROC_THREAD_ATTRIBUTE_LIST)listBuffer;
@@ -113,7 +113,7 @@ namespace FELauncher.Engine.Processes
             }
         }
 
-        private unsafe void WaitProc(void* context, BOOLEAN TimerOrWaitFired)
+        private unsafe void WaitProc(void* context, BOOLEAN timerOrWaitFired)
         {
             uint exitCode;
             if (!PInvoke.GetExitCodeProcess(_safeProcHandle, out exitCode))
@@ -132,8 +132,7 @@ namespace FELauncher.Engine.Processes
         {
             if (_safeWaitHandle is not null)
             {
-                // Function can fail, but not doing anything currently if it does.
-                PInvoke.UnregisterWait(_safeWaitHandle);
+                _ = PInvoke.UnregisterWait(_safeWaitHandle);
 
                 _safeWaitHandle.Dispose();
                 _safeWaitHandle = null;
