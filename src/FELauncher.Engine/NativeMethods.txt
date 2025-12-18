@@ -3,10 +3,14 @@ CreateIoCompletionPort
 CreateJobObject
 CreateProcess
 DeleteProcThreadAttributeList
+EnumWindows
 GetExitCodeProcess
+GetProcessHandleFromHwnd
+GetProcessId
 GetQueuedCompletionStatus
 InitializeProcThreadAttributeList
 IsProcessInJob
+PostMessage
 PostQueuedCompletionStatus
 TerminateJobObject
 RegisterWaitForSingleObject
@@ -24,5 +28,6 @@ PROCESS_INFORMATION
 SIZE_T
 STARTUPINFOW
 STARTUPINFOEXW
+WM_*
 WT_*
 WIN32_ERROR

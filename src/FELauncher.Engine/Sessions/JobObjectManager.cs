@@ -76,13 +76,57 @@ namespace FELauncher.Engine.Sessions
 
             SetupIOCompletionPort();
 
-            try
+            await Task.Run(() => WaitForCompletionStatus(ct), CancellationToken.None);
+        }
+
+        /// <summary>
+        /// Posts WM_CLOSE to all top-level windows belonging to processes in the job.
+        /// </summary>
+        /// <param name="gracePeriod">Time, in seconds, to wait after posting to all windows.</param>
+        public async Task AttemptCloseWindowsInJobAsync(int gracePeriod = 0)
+        {
+            if (_safeJobHandle is null || _safeJobHandle.IsInvalid)
             {
-                await Task.Run(() => WaitForCompletionStatus(ct));
+                logger.CannotAccessJobInWindowEnum();
+                return;
             }
-            finally
+
+            PInvoke.EnumWindows((HWND windowHandle, LPARAM customParam) =>
             {
-                ReleaseJobObject();
+                using var procHandle = PInvoke.GetProcessHandleFromHwnd_SafeHandle(windowHandle);
+                if (procHandle is null) return true;
+
+                var pid = PInvoke.GetProcessId(procHandle);
+
+                BOOL inJob = false;
+                if (!PInvoke.IsProcessInJob(procHandle, _safeJobHandle, out inJob))
+                {
+                    var errorCode = Marshal.GetLastPInvokeError();
+                    var win32Ex = new Win32Exception(errorCode);
+
+                    logger.CouldNotDetermineIfProcInJob(pid, errorCode, win32Ex);
+                }
+
+                if (inJob)
+                {
+                    if (!PInvoke.PostMessage(windowHandle, PInvoke.WM_CLOSE, 0, 0))
+                    {
+                        var errorCode = Marshal.GetLastPInvokeError();
+                        var win32Ex = new Win32Exception(errorCode);
+
+                        logger.FailedToPostMessage(pid, errorCode, win32Ex);
+                    }
+                }
+
+                return true;
+            },
+            (LPARAM)0);
+
+            var waitTime = TimeSpan.FromSeconds(gracePeriod);
+            if (waitTime > TimeSpan.Zero)
+            {
+                logger.WaitingGracePeriod(gracePeriod);
+                await Task.Delay(waitTime);
             }
         }
 
@@ -94,7 +138,7 @@ namespace FELauncher.Engine.Sessions
         {
             if (_safeJobHandle is null || _safeJobHandle.IsInvalid)
             {
-                logger.TerminationUnecessary();
+                logger.TerminationUnnecessary();
                 return;
             }
 
@@ -103,7 +147,7 @@ namespace FELauncher.Engine.Sessions
                 var errorCode = Marshal.GetLastPInvokeError();
                 var win32Ex = new Win32Exception(errorCode);
 
-                logger.FailedToTerminateJobObject(errorCode, win32Ex.Message);
+                logger.FailedToTerminateJobObject(errorCode, win32Ex);
                 throw new JobObjectException($"Failed to terminate job object.", win32Ex);
             }
         }
@@ -117,7 +161,7 @@ namespace FELauncher.Engine.Sessions
                 var errorCode = Marshal.GetLastPInvokeError();
                 var win32Ex = new Win32Exception(errorCode);
 
-                logger.FailedToCreateJobObject(errorCode, win32Ex.Message);
+                logger.FailedToCreateJobObject(errorCode, win32Ex);
                 throw new JobObjectException("Failed to create job object.", win32Ex);
             }
 
@@ -134,7 +178,7 @@ namespace FELauncher.Engine.Sessions
                 var errorCode = Marshal.GetLastPInvokeError();
                 var win32Ex = new Win32Exception(errorCode);
 
-                logger.FailedToCreateIoCompletionPort(errorCode, win32Ex.Message);
+                logger.FailedToCreateIoCompletionPort(errorCode, win32Ex);
                 throw new JobObjectException("Failed to create IO completion port.", win32Ex);
             }
 
@@ -153,7 +197,7 @@ namespace FELauncher.Engine.Sessions
                 var errorCode = Marshal.GetLastPInvokeError();
                 var win32Ex = new Win32Exception(errorCode);
 
-                logger.FailedToSetJobObjectLimits(errorCode, win32Ex.Message);
+                logger.FailedToSetJobObjectLimits(errorCode, win32Ex);
                 throw new JobObjectException("Failed to set job object limits.", win32Ex);
             }
         }
@@ -164,7 +208,7 @@ namespace FELauncher.Engine.Sessions
         {
             using var reg = ct.Register(() =>
                 // Posts a dummy completion packet to break loop
-                PInvoke.PostQueuedCompletionStatus(_safeCompletionPortHandle, 0, 0, null));
+                _ = PInvoke.PostQueuedCompletionStatus(_safeCompletionPortHandle, 0, 0, null));
 
             uint completionCode;
             nuint completionKey;
@@ -177,7 +221,10 @@ namespace FELauncher.Engine.Sessions
                     out completionCode, out completionKey, out overlapped,
                     PInvoke.INFINITE))
                 {
-                    logger.FailedToGetCompletionStatus();
+                    var errorCode = Marshal.GetLastPInvokeError();
+                    var win32Ex = new Win32Exception(errorCode);
+
+                    logger.FailedToGetCompletionStatus(errorCode, win32Ex);
                     return;
                 }
 
