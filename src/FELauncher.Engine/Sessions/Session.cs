@@ -10,6 +10,7 @@ namespace FELauncher.Engine.Sessions
         RunningPreProcesses,
         RunningFrontend,
         RunningPostHooks,
+        Stopping,
         Completed,
         Aborted,
         Failed
@@ -60,6 +61,13 @@ namespace FELauncher.Engine.Sessions
 
         public bool IsActive =>
             Status is not (SessionStatus.Created
+                        or SessionStatus.Completed
+                        or SessionStatus.Aborted
+                        or SessionStatus.Failed);
+
+        public bool CanRequestStop =>
+            Status is not (SessionStatus.Created
+                        or SessionStatus.Stopping
                         or SessionStatus.Completed
                         or SessionStatus.Aborted
                         or SessionStatus.Failed);
