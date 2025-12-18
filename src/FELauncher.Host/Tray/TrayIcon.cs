@@ -12,14 +12,14 @@ namespace FELauncher.Host.Tray
         private readonly HICON _hIcon;
         private readonly NOTIFYICONDATAW _iconData;
 
-        public TrayIcon(HWND hWnd, uint callbackMsg)
+        public TrayIcon(HWND windowHandle, uint callbackMsg)
         {
             _hIcon = LoadEmbeddedIcon(HostConstants.EmbeddedIcon);
 
             unsafe
             {
                 _iconData.cbSize             = (uint)sizeof(NOTIFYICONDATAW);
-                _iconData.hWnd               = hWnd;
+                _iconData.hWnd               = windowHandle;
                 _iconData.uID                = 1;
                 _iconData.uCallbackMessage   = callbackMsg;
                 _iconData.hIcon              = _hIcon;
@@ -44,14 +44,14 @@ namespace FELauncher.Host.Tray
 
         public void AddIcon()
         {
-            PInvoke.Shell_NotifyIcon(NOTIFY_ICON_MESSAGE.NIM_ADD, _iconData);
-            PInvoke.Shell_NotifyIcon(NOTIFY_ICON_MESSAGE.NIM_SETVERSION, _iconData);
+            _ = PInvoke.Shell_NotifyIcon(NOTIFY_ICON_MESSAGE.NIM_ADD, _iconData);
+            _ = PInvoke.Shell_NotifyIcon(NOTIFY_ICON_MESSAGE.NIM_SETVERSION, _iconData);
         }
 
         public void Dispose()
         {
-            PInvoke.Shell_NotifyIcon(NOTIFY_ICON_MESSAGE.NIM_DELETE, _iconData);
-            PInvoke.DestroyIcon(_hIcon);
+            _ = PInvoke.Shell_NotifyIcon(NOTIFY_ICON_MESSAGE.NIM_DELETE, _iconData);
+            _ = PInvoke.DestroyIcon(_hIcon);
         }
     }
 }
