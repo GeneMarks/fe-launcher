@@ -8,7 +8,7 @@ namespace FELauncher.Host.Tray
     internal sealed class TrayWindowHost(TrayController controller) : IDisposable
     {
         private TrayIcon? _notifyIcon;
-        private HWND _hWnd;
+        private HWND _windowHandle;
         private const uint WM_TRAYICON = 0x800;
         private const string ClassName = "FELauncherTrayWnd";
         private IntPtr _classNamePtr;
@@ -19,13 +19,13 @@ namespace FELauncher.Host.Tray
         {
             _classNamePtr = Marshal.StringToHGlobalUni(ClassName);
             RegisterClass();
-            _hWnd = CreateMessageWindow();
+            _windowHandle = CreateMessageWindow();
 
-            _notifyIcon = new TrayIcon(_hWnd, WM_TRAYICON);
+            _notifyIcon = new TrayIcon(_windowHandle, WM_TRAYICON);
             _notifyIcon.AddIcon();
 
             MSG msg;
-            while (PInvoke.GetMessage(out msg, HWND.Null, 0, 0)) // Don't use _hWnd so WM_QUIT works
+            while (PInvoke.GetMessage(out msg, HWND.Null, 0, 0)) // Don't use _windowHandle so WM_QUIT works
             {
                 PInvoke.TranslateMessage(msg);
                 PInvoke.DispatchMessage(msg);
@@ -34,9 +34,9 @@ namespace FELauncher.Host.Tray
 
         public void Stop()
         {
-            if (_hWnd == HWND.Null) return;
+            if (_windowHandle == HWND.Null) return;
 
-            PInvoke.PostMessage(_hWnd, PInvoke.WM_CLOSE, 0, 0);
+            _ = PInvoke.PostMessage(_windowHandle, PInvoke.WM_CLOSE, 0, 0);
         }
 
         private unsafe void RegisterClass()
@@ -48,7 +48,7 @@ namespace FELauncher.Host.Tray
                 lpszClassName = new PCWSTR((char*)_classNamePtr)
             };
 
-            PInvoke.RegisterClassEx(wc);
+            _ = PInvoke.RegisterClassEx(wc);
         }
         
         private static unsafe HWND CreateMessageWindow()
@@ -64,18 +64,18 @@ namespace FELauncher.Host.Tray
         }
 
         private LRESULT WndProc(
-            HWND hWnd,
-            uint uMsg,
+            HWND windowHandle,
+            uint message,
             WPARAM wParam,
             LPARAM lParam)
         {
-            switch (uMsg)
+            switch (message)
             {
                 case PInvoke.WM_CLOSE:
                     _notifyIcon?.Dispose();
                     _notifyIcon = null;
 
-                    PInvoke.DestroyWindow(hWnd);
+                    _ = PInvoke.DestroyWindow(windowHandle);
                     break;
 
                 case PInvoke.WM_DESTROY:
@@ -93,14 +93,14 @@ namespace FELauncher.Host.Tray
                             break;
 
                         case PInvoke.WM_RBUTTONUP:
-                            TrayMenu.ShowMenu(hWnd, controller);
+                            TrayMenu.ShowMenu(windowHandle, controller);
                             break;
                     }
                     break;
                 }
             }
 
-            return PInvoke.DefWindowProc(hWnd, uMsg, wParam, lParam);
+            return PInvoke.DefWindowProc(windowHandle, message, wParam, lParam);
         }
 
         public void Dispose()
