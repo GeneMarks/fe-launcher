@@ -93,13 +93,13 @@ namespace FELauncher.Engine.Sessions
 
             PInvoke.EnumWindows((HWND windowHandle, LPARAM customParam) =>
             {
-                using var procHandle = PInvoke.GetProcessHandleFromHwnd_SafeHandle(windowHandle);
-                if (procHandle is null) return true;
+                using var safeProcHandle = PInvoke.GetProcessHandleFromHwnd_SafeHandle(windowHandle);
+                if (safeProcHandle is null) return true;
 
-                var pid = PInvoke.GetProcessId(procHandle);
+                var pid = PInvoke.GetProcessId(safeProcHandle);
 
                 BOOL inJob = false;
-                if (!PInvoke.IsProcessInJob(procHandle, _safeJobHandle, out inJob))
+                if (!PInvoke.IsProcessInJob(safeProcHandle, _safeJobHandle, out inJob))
                 {
                     var errorCode = Marshal.GetLastPInvokeError();
                     var win32Ex = new Win32Exception(errorCode);
