@@ -11,18 +11,13 @@ namespace FELauncher.Host.Tray
         ISessionManager sessionManager)
     {
         public bool IsSessionActive => sessionManager.IsSessionActive;
+        public bool CanEndSession => sessionManager.CanEndSession;
 
         public void LaunchFrontend()
-        {
-            var ct = sessionManager.CancellationTokenSource.Token;
-            sessionManager.StartNewSessionAsync(ct);
-        }
+            => sessionManager.StartNewSessionAsync();
 
         public void EndSession()
-        {
-            var cts = sessionManager.CancellationTokenSource;
-            cts.Cancel();
-        }
+            => sessionManager.RequestEndSession();
 
         public void OpenSettings()
         {
@@ -31,9 +26,7 @@ namespace FELauncher.Host.Tray
         }
 
         public void Exit()
-        {
-            lifetime.StopApplication();
-        }
+            => lifetime.StopApplication();
 
         public static void CheckUpdates()
         {
