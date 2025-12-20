@@ -3,10 +3,10 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 
-namespace FELauncher.Host.Tray
+namespace FELauncher.UI.Shell.Tray
 {
-    internal sealed class TrayController(
-        ILogger<TrayController> logger,
+    internal sealed class TrayActionHandler(
+        ILogger<TrayActionHandler> logger,
         IHostApplicationLifetime lifetime,
         ISessionManager sessionManager)
     {
@@ -30,7 +30,7 @@ namespace FELauncher.Host.Tray
 
         public static void CheckUpdates()
         {
-            var psi = new ProcessStartInfo(HostConstants.CheckUpdatesUrl)
+            var psi = new ProcessStartInfo(ShellConstants.CheckUpdatesUrl)
             {
                 UseShellExecute = true
             };

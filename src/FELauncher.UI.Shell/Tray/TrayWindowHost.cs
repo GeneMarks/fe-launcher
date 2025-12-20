@@ -3,9 +3,9 @@ using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.UI.WindowsAndMessaging;
 
-namespace FELauncher.Host.Tray
+namespace FELauncher.UI.Shell.Tray
 {
-    internal sealed class TrayWindowHost(TrayController controller) : IDisposable
+    internal sealed class TrayWindowHost(TrayActionHandler handler) : IDisposable
     {
         private TrayIcon? _notifyIcon;
         private HWND _windowHandle;
@@ -89,11 +89,11 @@ namespace FELauncher.Host.Tray
                     switch (code)
                     {
                         case PInvoke.WM_LBUTTONDBLCLK:
-                            controller.LaunchFrontend();
+                            handler.LaunchFrontend();
                             break;
 
                         case PInvoke.WM_RBUTTONUP:
-                            TrayMenu.ShowMenu(windowHandle, controller);
+                            TrayMenu.ShowMenu(windowHandle, handler);
                             break;
                     }
                     break;

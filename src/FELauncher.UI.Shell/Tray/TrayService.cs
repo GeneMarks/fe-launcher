@@ -1,15 +1,15 @@
 ﻿using Microsoft.Extensions.Hosting;
 
-namespace FELauncher.Host.Tray
+namespace FELauncher.UI.Shell.Tray
 {
-    internal sealed class TrayService(TrayController controller) : BackgroundService
+    internal sealed class TrayService(TrayActionHandler handler) : BackgroundService
     {
         private Thread? _thread;
         private TrayWindowHost? _tray;
 
         protected override Task ExecuteAsync(CancellationToken ct)
         {
-            _tray = new TrayWindowHost(controller);
+            _tray = new TrayWindowHost(handler);
 
             _thread = new Thread(_tray.Run)
             {

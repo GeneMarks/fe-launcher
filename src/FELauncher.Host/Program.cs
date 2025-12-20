@@ -2,8 +2,9 @@
 using FELauncher.Host;
 using FELauncher.Host.Bootstrap;
 using FELauncher.Host.Tray;
+using FELauncher.UI.Shell;
+using FELauncher.UI.Shell.TaskDialog;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 class Program
@@ -52,9 +53,7 @@ class Program
 
         builder.Services.ConfigureEngineSettings(builder.Configuration);
         builder.Services.AddEngineServices();
-
-        builder.Services.AddSingleton<TrayController>();
-        builder.Services.AddHostedService<TrayService>();
+            builder.Services.AddShellServices();
 
         using IHost host = builder.Build();
 

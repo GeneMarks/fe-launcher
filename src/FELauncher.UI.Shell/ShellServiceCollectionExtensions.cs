@@ -1,0 +1,16 @@
+﻿using FELauncher.UI.Shell.Tray;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace FELauncher.UI.Shell
+{
+    public static class ShellServiceCollectionExtensions
+    {
+        public static IServiceCollection AddShellServices(this IServiceCollection services)
+        {
+            services.AddSingleton<TrayActionHandler>();
+            services.AddHostedService<TrayService>();
+
+            return services;
+        }
+    }
+}

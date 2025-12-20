@@ -8,11 +8,14 @@ DestroyWindow
 DispatchMessage
 GetCursorPos
 GetMessage
+MessageBox
 PostMessage
 PostQuitMessage
 RegisterClassEx
 SetForegroundWindow
 Shell_NotifyIcon
+TaskDialog
+TaskDialogIndirect
 TrackPopupMenu
 TrackPopupMenuEx
 TranslateMessage
@@ -20,6 +23,7 @@ HWND_*
 MSG
 NIN_*
 PCWSTR
+TD_*
 WM_*
 WNDCLASSEXW
 WNDPROC

@@ -3,7 +3,7 @@ using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.UI.WindowsAndMessaging;
 
-namespace FELauncher.Host.Tray
+namespace FELauncher.UI.Shell.Tray
 {
     internal static class TrayMenu
     {
@@ -17,14 +17,14 @@ namespace FELauncher.Host.Tray
             public const nuint Exit                = 1050;
         }
 
-        public static void ShowMenu(HWND windowHandle, TrayController controller)
+        public static void ShowMenu(HWND windowHandle, TrayActionHandler handler)
         {
             Point pt;
             PInvoke.GetCursorPos(out pt);
 
             using var menu = PInvoke.CreatePopupMenu_SafeHandle();
 
-            PopulateMenu(menu, controller.IsSessionActive, controller.CanEndSession);
+            PopulateMenu(menu, handler.IsSessionActive, handler.CanEndSession);
 
             // Foreground must be set to current HWND,
             // otherwise menu doesn't close when clicking outside it.
@@ -40,7 +40,7 @@ namespace FELauncher.Host.Tray
                 windowHandle,
                 null);
 
-            HandleMenuChoice(choice, controller);
+            HandleMenuChoice(choice, handler);
         }
 
         private static void PopulateMenu(
@@ -73,16 +73,16 @@ namespace FELauncher.Host.Tray
             _ = PInvoke.AppendMenu(menu, MENU_ITEM_FLAGS.MF_SEPARATOR, 0, null);
         }
 
-        private static void HandleMenuChoice(int choice, TrayController controller)
+        private static void HandleMenuChoice(int choice, TrayActionHandler handler)
         {
             switch ((nuint)choice)
             {
                 case Items.Launch:
-                    controller.LaunchFrontend();
+                    handler.LaunchFrontend();
                     break;
 
                 case Items.EndSession:
-                    controller.EndSession();
+                    handler.EndSession();
                     break;
 
                 case Items.InstallDependencies:
@@ -92,11 +92,11 @@ namespace FELauncher.Host.Tray
                     break;
 
                 case Items.CheckUpdates:
-                    TrayController.CheckUpdates();
+                    TrayActionHandler.CheckUpdates();
                     break;
 
                 case Items.Exit:
-                    controller.Exit();
+                    handler.Exit();
                     break;
 
                 default:

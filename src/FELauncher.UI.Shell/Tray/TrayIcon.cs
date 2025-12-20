@@ -5,7 +5,7 @@ using Windows.Win32.Foundation;
 using Windows.Win32.UI.Shell;
 using Windows.Win32.UI.WindowsAndMessaging;
 
-namespace FELauncher.Host.Tray
+namespace FELauncher.UI.Shell.Tray
 {
     internal sealed class TrayIcon : IDisposable
     {
@@ -14,7 +14,7 @@ namespace FELauncher.Host.Tray
 
         public TrayIcon(HWND windowHandle, uint callbackMsg)
         {
-            _hIcon = LoadEmbeddedIcon(HostConstants.EmbeddedIcon);
+            _hIcon = LoadEmbeddedIcon(ShellConstants.EmbeddedIcon);
 
             unsafe
             {
@@ -33,7 +33,7 @@ namespace FELauncher.Host.Tray
 
         private static HICON LoadEmbeddedIcon(string resourceName)
         {
-            var assembly = Assembly.GetExecutingAssembly();
+            var assembly = typeof(TrayIcon).Assembly;
             using var stream = assembly.GetManifestResourceStream(resourceName);
 
             Icon icon = new Icon(stream!);
