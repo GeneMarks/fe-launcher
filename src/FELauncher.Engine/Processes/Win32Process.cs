@@ -99,7 +99,7 @@ namespace FELauncher.Engine.Processes
 
                 if (!PInvoke.RegisterWaitForSingleObject(
                     out _safeWaitHandle, _safeProcHandle, new WAITORTIMERCALLBACK(WaitProc),
-                    &pi, PInvoke.INFINITE, WORKER_THREAD_FLAGS.WT_EXECUTEONLYONCE))
+                    null, PInvoke.INFINITE, WORKER_THREAD_FLAGS.WT_EXECUTEONLYONCE))
                 {
                     var errorCode = Marshal.GetLastPInvokeError();
                     var win32Ex = new Win32Exception(errorCode);
