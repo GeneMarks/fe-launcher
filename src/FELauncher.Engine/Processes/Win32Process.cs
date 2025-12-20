@@ -123,11 +123,11 @@ namespace FELauncher.Engine.Processes
                 exitCode = 0; // todo: handle function failure differently
             }
 
-            _logger.ProcessExited(_pid, _pathWithArgs, exitCode);
             Exited?.Invoke(this, new Win32ProcessExitedEventArgs()
             {
-                ExitCode = exitCode,
-                ProcessId = _pid
+                ProcessId   = _pid,
+                ProcessPath = _pathWithArgs,
+                ExitCode    = exitCode
             });
         }
 
