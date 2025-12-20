@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using NanoidDotNet;
+using System.Diagnostics;
 
 namespace FELauncher.Engine.Sessions
 {
@@ -18,7 +19,7 @@ namespace FELauncher.Engine.Sessions
 
     internal sealed class Session
     {
-        public Guid Id { get; } = Guid.NewGuid();
+        public string Id { get; } = Nanoid.Generate(size: 10);
         public DateTimeOffset CreatedAt { get; } = DateTimeOffset.UtcNow;
         public SessionStatus Status
         {

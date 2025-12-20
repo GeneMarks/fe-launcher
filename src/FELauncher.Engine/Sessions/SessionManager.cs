@@ -8,6 +8,7 @@ namespace FELauncher.Engine.Sessions
 {
     internal sealed class SessionManager(
         ILogger<SessionManager> logger,
+        ISessionLoggerScopeProvider sessionLoggerScopeProvider,
         IOptionsMonitor<FELauncherSettings> settings,
         JobObjectManager jobObjectManager,
         FELProcessManager processManager,
@@ -60,6 +61,9 @@ namespace FELauncher.Engine.Sessions
             }
 
             var ct = _sessionCts.Token;
+
+            sessionLoggerScopeProvider.SetCurrentSessionId(_session.Id);
+            using var sessionScope = sessionLoggerScopeProvider.BeginSessionScope(logger);
 
             try
             {
@@ -134,6 +138,7 @@ namespace FELauncher.Engine.Sessions
             {
                 _sessionCts.Dispose();
                 _sessionCts = null;
+                sessionLoggerScopeProvider.SetCurrentSessionId(null);
             }
         }
 

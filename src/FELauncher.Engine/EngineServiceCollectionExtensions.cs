@@ -13,6 +13,7 @@ namespace FELauncher.Engine
         {
             // Public services
             services.AddSingleton<ISessionManager, SessionManager>();
+            services.AddSingleton<ISessionLoggerScopeProvider, SessionLoggerScopeProvider>();
 
             // Internal services
             services.AddSingleton<PathResolver>();
