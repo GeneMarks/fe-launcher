@@ -97,6 +97,11 @@ namespace FELauncher.Engine.Sessions
                 if (safeProcHandle is null) return true;
 
                 var pid = PInvoke.GetProcessId(safeProcHandle);
+                if (pid == 0)
+                {
+                    // todo: log something?
+                    return true;
+                }
 
                 BOOL inJob = false;
                 if (!PInvoke.IsProcessInJob(safeProcHandle, _safeJobHandle, out inJob))
