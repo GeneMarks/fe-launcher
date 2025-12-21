@@ -12,9 +12,9 @@ InitializeProcThreadAttributeList
 IsProcessInJob
 PostMessage
 PostQueuedCompletionStatus
-TerminateJobObject
 RegisterWaitForSingleObject
 SetInformationJobObject
+TerminateJobObject
 UnregisterWait
 UpdateProcThreadAttribute
 INFINITE
