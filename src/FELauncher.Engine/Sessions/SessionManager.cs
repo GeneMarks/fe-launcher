@@ -16,6 +16,7 @@ namespace FELauncher.Engine.Sessions
         FrontendRunner frontendRunner) : ISessionManager
     {
         private Session? _session;
+        private FELauncherSettings? _sessionSettings;
         private CancellationTokenSource? _sessionCts;
         private readonly Lock _sessionLock = new();
 
@@ -67,7 +68,7 @@ namespace FELauncher.Engine.Sessions
 
             try
             {
-                FELauncherSettings sessionSettings = settings.CurrentValue;
+                _sessionSettings = settings.CurrentValue;
 
                 jobObjectManager.ResetJobObject();
                 processManager.FELProcessExited += OnFELProcessExited;
@@ -79,13 +80,13 @@ namespace FELauncher.Engine.Sessions
                 {
                     _session.Status = SessionStatus.RunningPreProcesses;
                 }
-                await preProcessRunner.RunAsync(sessionSettings.PreProcesses, ct);
+                await preProcessRunner.RunAsync(_sessionSettings.PreProcesses, ct);
 
                 lock (_sessionLock)
                 {
                     _session.Status = SessionStatus.RunningFrontend;
                 }
-                await frontendRunner.RunAsync(sessionSettings.Frontend, ct);
+                await frontendRunner.RunAsync(_sessionSettings.Frontend, ct);
 
                 // Wait for all processes to exit naturally.
                 await jobObjectManager.WaitForJobObjectCompletionAsync(ct);
@@ -137,6 +138,7 @@ namespace FELauncher.Engine.Sessions
             finally
             {
                 _sessionCts.Dispose();
+                _sessionSettings = null;
                 _sessionCts = null;
                 sessionLoggerScopeProvider.SetCurrentSessionId(null);
             }
