@@ -172,7 +172,8 @@ namespace FELauncher.Engine.Sessions
                 _session.Status = SessionStatus.Stopping;
             }
 
-            await jobObjectManager.AttemptCloseWindowsInJobAsync(1);
+            await jobObjectManager.AttemptCloseWindowsInJobAsync(
+                _sessionSettings?.EndSessionGracePeriod ?? 0);
             try
             {
                 jobObjectManager.TerminateJobObject();
