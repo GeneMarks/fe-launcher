@@ -107,9 +107,8 @@ namespace FELauncher.Engine.Sessions
                 if (!PInvoke.IsProcessInJob(safeProcHandle, _safeJobHandle, out inJob))
                 {
                     var errorCode = Marshal.GetLastPInvokeError();
-                    var win32Ex = new Win32Exception(errorCode);
-
-                    logger.CouldNotDetermineIfProcInJob(pid, errorCode, win32Ex);
+                    logger.CouldNotDetermineIfProcInJob(pid, errorCode,
+                        new Win32Exception(errorCode));
                 }
 
                 if (inJob)
@@ -117,9 +116,8 @@ namespace FELauncher.Engine.Sessions
                     if (!PInvoke.PostMessage(windowHandle, PInvoke.WM_CLOSE, 0, 0))
                     {
                         var errorCode = Marshal.GetLastPInvokeError();
-                        var win32Ex = new Win32Exception(errorCode);
-
-                        logger.FailedToPostMessage(pid, errorCode, win32Ex);
+                        logger.FailedToPostMessage(pid, errorCode,
+                            new Win32Exception(errorCode));
                     }
                 }
 
@@ -227,9 +225,7 @@ namespace FELauncher.Engine.Sessions
                     PInvoke.INFINITE))
                 {
                     var errorCode = Marshal.GetLastPInvokeError();
-                    var win32Ex = new Win32Exception(errorCode);
-
-                    logger.FailedToGetCompletionStatus(errorCode, win32Ex);
+                    logger.FailedToGetCompletionStatus(errorCode, new Win32Exception(errorCode));
                     return;
                 }
 
