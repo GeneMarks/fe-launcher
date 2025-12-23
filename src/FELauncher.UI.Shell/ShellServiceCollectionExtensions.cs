@@ -1,4 +1,6 @@
-﻿using FELauncher.UI.Shell.Tray;
+﻿using FELauncher.Shared.Contracts;
+using FELauncher.UI.Shell.Notifications;
+using FELauncher.UI.Shell.Tray;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace FELauncher.UI.Shell
@@ -9,6 +11,7 @@ namespace FELauncher.UI.Shell
         {
             services.AddSingleton<TrayActionHandler>();
             services.AddHostedService<TrayService>();
+            services.AddSingleton<INotifier, Notifier>();
 
             return services;
         }

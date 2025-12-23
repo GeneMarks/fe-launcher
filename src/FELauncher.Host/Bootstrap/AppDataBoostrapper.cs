@@ -23,6 +23,7 @@ namespace FELauncher.Host.Bootstrap
             EnsurePathExists(AppPaths.DependenciesDirectory);
 
             EnsureSettingsFileExists();
+            EnsureNotificationImageFileExists();
         }
 
         private static void EnsurePathExists(string path)
@@ -70,7 +71,23 @@ namespace FELauncher.Host.Bootstrap
                 throw new AppDataBootstrapException($"Failed to create settings file '{settingsFile}'.", ex);
             }
         }
+
+        private static void EnsureNotificationImageFileExists()
+        {
+            var imageFile = AppPaths.NotificationImageFile;
+
+            try
+            {
+                if (File.Exists(imageFile)) return;
+
+                var assembly = typeof(AppConstants).Assembly;
+                using var resource = assembly.GetManifestResourceStream(AppConstants.NotificationImageResource);
+                using var file = new FileStream(imageFile, FileMode.Create, FileAccess.Write);
+                resource!.CopyTo(file);
         }
+            catch (Exception ex)
+            {
+                throw new AppDataBootstrapException($"Failed to create asset file '{imageFile}'.", ex);
             }
         }
     }
