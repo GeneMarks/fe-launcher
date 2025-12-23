@@ -4,7 +4,7 @@ namespace FELauncher.Engine.Settings
     {
         public string? LogLevel { get; set; }
         public int? EndSessionGracePeriod { get; set; }
-        public FrontendSettings Frontend { get; set; } = new();
-        public List<PreProcessSettings> PreProcesses { get; set; } = [];
+        public ProcessSettings Frontend { get; set; } = new();
+        public List<ProcessSettings> PreProcesses { get; set; } = [];
     }
 }

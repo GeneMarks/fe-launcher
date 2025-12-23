@@ -1,5 +1,6 @@
 using FELauncher.Engine.Settings;
 using FELauncher.Host.Exceptions;
+using FELauncher.Shared;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -16,13 +17,17 @@ namespace FELauncher.Host.Bootstrap
 
         public static void EnsureAppDataInitialized()
         {
-            EnsureAppDataDirectoryExists();
+            EnsurePathExists(AppPaths.AppDataDirectory);
+            EnsurePathExists(AppPaths.AssetsDirectory);
+            EnsurePathExists(AppPaths.HooksDirectory);
+            EnsurePathExists(AppPaths.DependenciesDirectory);
+
             EnsureSettingsFileExists();
         }
 
-        private static void EnsureAppDataDirectoryExists()
+        private static void EnsurePathExists(string path)
         {
-            const string appData = HostPaths.AppDataDirectory;
+            if (Directory.Exists(path)) return;
 
             static bool AppDataDirectoryExists() => Directory.Exists(appData);
 
@@ -30,18 +35,17 @@ namespace FELauncher.Host.Bootstrap
 
             try
             {
-                _ = Directory.CreateDirectory(appData);
+                _ = Directory.CreateDirectory(path);
             }
             catch (Exception ex)
             {
-                throw new AppDataBootstrapException(
-                    $"Failed to create appdata directory '{appData}'.", ex);
+                throw new AppDataBootstrapException($"Failed to create directory '{path}'.", ex);
             }
         }
 
         private static void EnsureSettingsFileExists()
         {
-            var settingsFile = HostPaths.SettingsFile;
+            var settingsFile = AppPaths.SettingsFile;
 
             if (Path.Exists(settingsFile)) return;
 
@@ -63,8 +67,10 @@ namespace FELauncher.Host.Bootstrap
             }
             catch (Exception ex)
             {
-                throw new AppDataBootstrapException(
-                    $"Failed to create settings file '{settingsFile}'.", ex);
+                throw new AppDataBootstrapException($"Failed to create settings file '{settingsFile}'.", ex);
+            }
+        }
+        }
             }
         }
     }

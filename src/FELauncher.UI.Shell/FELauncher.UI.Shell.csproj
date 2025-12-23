@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net9.0-windows</TargetFramework>
+        <TargetFramework>net9.0-windows10.0.17763.0</TargetFramework>
         <PlatformTarget>x64</PlatformTarget>
         <RuntimeIdentifier>win-x64</RuntimeIdentifier>
         <ImplicitUsings>enable</ImplicitUsings>
@@ -9,11 +9,13 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\FELauncher.Shared\FELauncher.Shared.csproj" />
         <ProjectReference Include="..\FELauncher.Engine\FELauncher.Engine.csproj" />
     </ItemGroup>
 
     <ItemGroup>
         <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.1" />
+        <PackageReference Include="Microsoft.Toolkit.Uwp.Notifications" Version="7.1.3" />
         <PackageReference Include="Microsoft.Windows.CsWin32" Version="0.3.264">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -21,11 +23,6 @@
         <PackageReference Include="System.Drawing.Common" Version="10.0.1" />
         <PackageReference Include="System.Memory" Version="4.6.3" />
         <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.1.2" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <EmbeddedResource Include="..\..\assets\win_ico_16.ico"
-                          LogicalName="FELauncher.UI.Shell.Assets.win_ico_16.ico" />
     </ItemGroup>
 
 </Project>

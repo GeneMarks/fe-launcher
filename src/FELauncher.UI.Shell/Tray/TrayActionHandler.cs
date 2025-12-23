@@ -1,4 +1,5 @@
-﻿using FELauncher.Engine.Sessions;
+﻿using FELauncher.Shared;
+using FELauncher.Shared.Contracts;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
@@ -30,7 +31,7 @@ namespace FELauncher.UI.Shell.Tray
 
         public static void CheckUpdates()
         {
-            var psi = new ProcessStartInfo(ShellConstants.CheckUpdatesUrl)
+            var psi = new ProcessStartInfo(AppConstants.CheckUpdatesUrl)
             {
                 UseShellExecute = true
             };

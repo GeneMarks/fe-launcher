@@ -2,12 +2,12 @@
 
 namespace FELauncher.Engine.Processes.Logging
 {
-    internal static partial class FELProcessManagerLogging
+    internal static partial class ProcessRunnerLogging
     {
         [LoggerMessage(
             Level = LogLevel.Information,
             Message = "Pid {ProcessId} ({ProcessPath}) exited with exit code: {ExitCode}.")]
-        public static partial void Win32ProcessExited(this ILogger logger, uint processId, string processPath, uint exitCode);
+        public static partial void ProcessExited(this ILogger logger, uint processId, string processPath, uint exitCode);
     }
 }
 

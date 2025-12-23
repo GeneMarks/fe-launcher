@@ -24,6 +24,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\FELauncher.Shared\FELauncher.Shared.csproj" />
         <ProjectReference Include="..\FELauncher.Engine\FELauncher.Engine.csproj" />
         <ProjectReference Include="..\FELauncher.UI.Shell\FELauncher.UI.Shell.csproj" />
     </ItemGroup>

@@ -1,4 +1,4 @@
-﻿namespace FELauncher.Engine.Sessions
+﻿namespace FELauncher.Shared.Contracts
 {
     public interface ISessionManager
     {

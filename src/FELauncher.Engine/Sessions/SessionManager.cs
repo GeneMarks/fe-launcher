@@ -1,6 +1,8 @@
 ﻿using FELauncher.Engine.Exceptions;
+using FELauncher.Engine.JobObjects;
 using FELauncher.Engine.Processes;
 using FELauncher.Engine.Settings;
+using FELauncher.Shared.Contracts;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -10,10 +12,9 @@ namespace FELauncher.Engine.Sessions
         ILogger<SessionManager> logger,
         ISessionLoggerScopeProvider sessionLoggerScopeProvider,
         IOptionsMonitor<FELauncherSettings> settings,
+        INotifier notifier,
         JobObjectManager jobObjectManager,
-        FELProcessManager processManager,
-        PreProcessRunner preProcessRunner,
-        FrontendRunner frontendRunner) : ISessionManager
+        ProcessRunner processRunner) : ISessionManager
     {
         private Session? _session;
         private FELauncherSettings? _sessionSettings;
@@ -70,8 +71,8 @@ namespace FELauncher.Engine.Sessions
             {
                 _sessionSettings = settings.CurrentValue;
 
+                processRunner.RunnerProcessExited += OnRunnerProcessExited;
                 jobObjectManager.ResetJobObject();
-                processManager.FELProcessExited += OnFELProcessExited;
 
                 /* Pre-hooks */
                 // session.Status = SessionStatus.RunningPreHooks;
@@ -80,13 +81,13 @@ namespace FELauncher.Engine.Sessions
                 {
                     _session.Status = SessionStatus.RunningPreProcesses;
                 }
-                await preProcessRunner.RunAsync(_sessionSettings.PreProcesses, ct);
+                await processRunner.RunAsync(_sessionSettings.PreProcesses, ct);
 
                 lock (_sessionLock)
                 {
                     _session.Status = SessionStatus.RunningFrontend;
                 }
-                await frontendRunner.RunAsync(_sessionSettings.Frontend, ct);
+                await processRunner.RunAsync(_sessionSettings.Frontend, ct);
 
                 // Wait for all processes to exit naturally.
                 await jobObjectManager.WaitForJobObjectCompletionAsync(ct);
@@ -110,37 +111,40 @@ namespace FELauncher.Engine.Sessions
             catch (JobObjectException ex)
             {
                 // cancel session run
-                // toast here
                 lock (_sessionLock)
                 {
                     _session.Status = SessionStatus.Failed;
                 }
+                // log here
+                // toast here or task dialog?
             }
-            catch (Win32ProcessCreationException ex)
+            catch (ProcessCreationException ex)
             {
                 // cancel session run
-                // toast here
                 lock (_sessionLock)
                 {
                     _session.Status = SessionStatus.Failed;
                 }
+                // log here
+                // toast here or task dialog?
             }
             catch (Exception ex)
             {
-                // cancel session run
-                // log unknown session
-                // toast here
+                await StopSessionAsync();
                 lock (_sessionLock)
                 {
                     _session.Status = SessionStatus.Failed;
                 }
+                // log here
+                // toast here or task dialog?
             }
             finally
             {
                 _sessionCts.Dispose();
                 _sessionSettings = null;
                 _sessionCts = null;
-                sessionLoggerScopeProvider.SetCurrentSessionId(null);
+                processRunner.RunnerProcessExited -= OnRunnerProcessExited;
+                // sessionLoggerScopeProvider.SetCurrentSessionId(null);
             }
         }
 
@@ -181,8 +185,17 @@ namespace FELauncher.Engine.Sessions
             catch { /* Maybe do something here */ }
         }
 
-        private void OnFELProcessExited(object? sender, FELProcessExitedEventArgs e)
+        private void OnRunnerProcessExited(object? sender, RunnerProcessExitedEventArgs e)
         {
+            // Only send notification when process exits during a session that is in a cancellable state
+            if (e.NotifyOnExit && CanEndSession)
+            {
+                notifier.Notify(
+                    "Process Exited",
+                    $"'{e.ProcessName}' has terminated.");
+            }
+
+
             //if (e.EndSessionOnExit) RequestEndSession();
         }
     }

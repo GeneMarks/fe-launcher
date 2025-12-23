@@ -1,12 +1,12 @@
 using FELauncher.Engine.IO.Logging;
+using FELauncher.Shared.Contracts;
 using Microsoft.Extensions.Logging;
 
 namespace FELauncher.Engine.IO
 {
-	internal sealed class PathResolver(ILogger<PathResolver> logger)
+	internal sealed class PathResolver(ILogger<PathResolver> logger) : IPathResolver
 	{
         private readonly string _basePath = AppContext.BaseDirectory;
-
 		
 		/// <summary>
 		/// Resolves relative paths by adding application directory to base.

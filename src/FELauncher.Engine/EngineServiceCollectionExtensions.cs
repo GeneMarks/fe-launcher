@@ -1,7 +1,9 @@
 ﻿using FELauncher.Engine.IO;
+using FELauncher.Engine.JobObjects;
 using FELauncher.Engine.Processes;
 using FELauncher.Engine.Sessions;
 using FELauncher.Engine.Settings;
+using FELauncher.Shared.Contracts;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -12,16 +14,14 @@ namespace FELauncher.Engine
         public static IServiceCollection AddEngineServices(this IServiceCollection services)
         {
             // Public services
+            services.AddSingleton<IPathResolver, PathResolver>();
             services.AddSingleton<ISessionManager, SessionManager>();
             services.AddSingleton<ISessionLoggerScopeProvider, SessionLoggerScopeProvider>();
 
             // Internal services
-            services.AddSingleton<PathResolver>();
-            services.AddSingleton<Win32ProcessFactory>();
-            services.AddSingleton<FELProcessManager>();
+            services.AddSingleton<ProcessFactory>();
+            services.AddSingleton<ProcessRunner>();
             services.AddSingleton<JobObjectManager>();
-            services.AddSingleton<PreProcessRunner>();
-            services.AddSingleton<FrontendRunner>();
 
             return services;
         }

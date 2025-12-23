@@ -1,7 +1,7 @@
 ﻿using FELauncher.Engine;
-using FELauncher.Host;
 using FELauncher.Host.Bootstrap;
 using FELauncher.Host.Exceptions;
+using FELauncher.Shared;
 using FELauncher.UI.Shell;
 using FELauncher.UI.Shell.TaskDialog;
 using Microsoft.Extensions.Configuration;
@@ -17,7 +17,7 @@ class Program
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0060:Remove unused parameter")]
     static int Main(string[] args)
     {
-        using var mutex = new Mutex(false, HostConstants.MutexName);
+        using var mutex = new Mutex(false, AppConstants.MutexName);
         bool hasHandle = false;
 
         try
@@ -64,7 +64,7 @@ class Program
         {
             config = new ConfigurationBuilder()
                 .SetBasePath(AppContext.BaseDirectory)
-                .AddJsonFile(HostPaths.SettingsFile, optional: false, reloadOnChange: true)
+                .AddJsonFile(AppPaths.SettingsFile)
                 .Build();
         }
         catch (Exception ex)
@@ -88,10 +88,10 @@ class Program
                 .WriteTo.File(
                     new ExpressionTemplate(
                         "{@t:yyyy-MM-dd HH:mm:ss.fff} [{@l:u3}]{#if SessionId is not null} [SID:{SessionId}]{#end} {@m}\n{@x}"),
-                    path: HostPaths.LogFile,
+                    path: AppPaths.LogFile,
                     rollOnFileSizeLimit: true,
-                    fileSizeLimitBytes: HostConstants.LogFileSizeLimit,
-                    retainedFileCountLimit: HostConstants.LogFileCountLimit)
+                    fileSizeLimitBytes: AppConstants.LogFileSizeLimit,
+                    retainedFileCountLimit: AppConstants.LogFileCountLimit)
                 .CreateLogger();
         }
         catch (Exception ex)

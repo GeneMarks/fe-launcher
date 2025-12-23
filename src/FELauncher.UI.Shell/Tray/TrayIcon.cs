@@ -1,5 +1,5 @@
-﻿using System.Drawing;
-using System.Reflection;
+﻿using FELauncher.Shared;
+using System.Drawing;
 using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.UI.Shell;
@@ -14,7 +14,7 @@ namespace FELauncher.UI.Shell.Tray
 
         public TrayIcon(HWND windowHandle, uint callbackMsg)
         {
-            _hIcon = LoadEmbeddedIcon(ShellConstants.EmbeddedIcon);
+            _hIcon = LoadEmbeddedIcon(AppConstants.TrayIconResource);
 
             unsafe
             {
@@ -33,10 +33,10 @@ namespace FELauncher.UI.Shell.Tray
 
         private static HICON LoadEmbeddedIcon(string resourceName)
         {
-            var assembly = typeof(TrayIcon).Assembly;
-            using var stream = assembly.GetManifestResourceStream(resourceName);
+            var assembly = typeof(AppConstants).Assembly;
+            using var resource = assembly.GetManifestResourceStream(resourceName);
 
-            Icon icon = new Icon(stream!);
+            Icon icon = new Icon(resource!);
 
             HICON hicon = (HICON)icon.Handle;
             return PInvoke.CopyIcon(hicon);

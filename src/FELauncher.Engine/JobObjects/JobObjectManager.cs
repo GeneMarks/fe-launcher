@@ -1,5 +1,5 @@
 ﻿using FELauncher.Engine.Exceptions;
-using FELauncher.Engine.Sessions.Logging;
+using FELauncher.Engine.JobObjects.Logging;
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32.SafeHandles;
 using System.ComponentModel;
@@ -8,7 +8,7 @@ using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.System.JobObjects;
 
-namespace FELauncher.Engine.Sessions
+namespace FELauncher.Engine.JobObjects
 {
     /// <summary>
     /// Manages the creation, termination, and lifetime of a Win32 job object.
@@ -91,7 +91,7 @@ namespace FELauncher.Engine.Sessions
                 return;
             }
 
-            PInvoke.EnumWindows((HWND windowHandle, LPARAM customParam) =>
+            PInvoke.EnumWindows((windowHandle, customParam) =>
             {
                 using var safeProcHandle = PInvoke.GetProcessHandleFromHwnd_SafeHandle(windowHandle);
                 if (safeProcHandle is null) return true;

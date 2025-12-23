@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 
-namespace FELauncher.Engine.Sessions
+namespace FELauncher.Shared.Contracts
 {
     public interface ISessionLoggerScopeProvider
     {

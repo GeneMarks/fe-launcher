@@ -2,7 +2,7 @@
 
 namespace FELauncher.Engine.Processes.Logging
 {
-    internal static partial class Win32ProcessFactoryLogging
+    internal static partial class ProcessFactoryLogging
     {
         [LoggerMessage(
             Level = LogLevel.Error,

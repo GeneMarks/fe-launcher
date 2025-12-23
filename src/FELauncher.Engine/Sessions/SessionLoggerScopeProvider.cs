@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using FELauncher.Shared.Contracts;
+using Microsoft.Extensions.Logging;
 
 namespace FELauncher.Engine.Sessions
 {
