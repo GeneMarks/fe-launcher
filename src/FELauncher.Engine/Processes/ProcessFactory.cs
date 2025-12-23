@@ -44,7 +44,7 @@ namespace FELauncher.Engine.Processes
 
             var pathWithArgs = string.IsNullOrEmpty(arguments) ? path : path + " " + arguments.Trim();
             var workingDir = Path.GetDirectoryName(path);
-            var prettyName = Path.GetFileNameWithoutExtension(pathWithArgs);
+            var prettyName = Path.GetFileNameWithoutExtension(path);
 
             return new Process(win32ProcessLogger, pathWithArgs, workingDir, prettyName);
         }
