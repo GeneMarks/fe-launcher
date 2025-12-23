@@ -80,7 +80,7 @@ namespace FELauncher.Host.Bootstrap
                 using var resource = assembly.GetManifestResourceStream(AppConstants.NotificationImageResource);
                 using var file = new FileStream(imageFile, FileMode.Create, FileAccess.Write);
                 resource!.CopyTo(file);
-        }
+            }
             catch (Exception ex)
             {
                 throw new AppDataBootstrapException($"Failed to create asset file '{imageFile}'.", ex);
