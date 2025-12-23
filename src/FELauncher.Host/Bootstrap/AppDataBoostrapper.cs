@@ -30,10 +30,6 @@ namespace FELauncher.Host.Bootstrap
         {
             if (Directory.Exists(path)) return;
 
-            static bool AppDataDirectoryExists() => Directory.Exists(appData);
-
-            if (AppDataDirectoryExists()) return;
-
             try
             {
                 _ = Directory.CreateDirectory(path);
