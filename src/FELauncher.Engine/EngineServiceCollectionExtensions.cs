@@ -4,6 +4,7 @@ using FELauncher.Engine.Processes;
 using FELauncher.Engine.Sessions;
 using FELauncher.Engine.Settings;
 using FELauncher.Shared.Contracts;
+using FELauncher.Shared.Contracts.Sessions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 

@@ -1,5 +1,5 @@
 ﻿using FELauncher.Shared;
-using FELauncher.Shared.Contracts;
+using FELauncher.Shared.Contracts.Sessions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
@@ -11,11 +11,11 @@ namespace FELauncher.UI.Shell.Tray
         IHostApplicationLifetime lifetime,
         ISessionOrchestrator sessionOrchestrator)
     {
-        public bool IsSessionActive => sessionOrchestrator.IsSessionActive;
-        public bool CanEndSession => sessionOrchestrator.CanEndSession;
+        public SessionStateSnapshot GetSessionState()
+            => sessionOrchestrator.GetSessionState();
 
-        public void LaunchFrontend()
-            => sessionOrchestrator.StartNewSessionAsync();
+        public async void LaunchFrontend()
+            => await sessionOrchestrator.StartNewSessionAsync();
 
         public void EndSession()
             => sessionOrchestrator.RequestEndSession();

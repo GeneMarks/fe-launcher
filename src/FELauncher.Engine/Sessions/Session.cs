@@ -1,22 +1,9 @@
-﻿using NanoidDotNet;
+﻿using FELauncher.Shared.Contracts.Sessions;
+using NanoidDotNet;
 using System.Diagnostics;
 
 namespace FELauncher.Engine.Sessions
 {
-    public enum SessionStatus
-    {
-        Created,
-        Starting,
-        RunningPreHooks,
-        RunningPreProcesses,
-        RunningFrontend,
-        RunningPostHooks,
-        Stopping,
-        Completed,
-        Aborted,
-        Failed
-    }
-
     internal sealed class Session
     {
         public string Id { get; } = Nanoid.Generate(size: 10);

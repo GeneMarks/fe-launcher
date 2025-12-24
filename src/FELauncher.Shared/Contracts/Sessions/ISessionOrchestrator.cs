@@ -1,10 +1,7 @@
-﻿namespace FELauncher.Shared.Contracts
+﻿namespace FELauncher.Shared.Contracts.Sessions
 {
     public interface ISessionOrchestrator
     {
-        bool IsSessionActive { get; }
-        bool CanEndSession { get; }
-
         /// <summary>
         /// Creates and runs a new session if an active one isn't already being orchestrated.
         /// </summary>
@@ -14,5 +11,10 @@
         /// Requests cancellation from the cancellation token source if the session is in a cancelable state.
         /// </summary>
         void RequestEndSession();
+
+        /// <summary>
+        /// Returns an immutable snapshot of the current session state.
+        /// </summary>
+        SessionStateSnapshot GetSessionState();
     }
 }

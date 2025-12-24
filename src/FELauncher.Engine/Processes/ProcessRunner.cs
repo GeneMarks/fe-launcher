@@ -1,7 +1,7 @@
 ﻿using FELauncher.Engine.JobObjects;
 using FELauncher.Engine.Processes.Logging;
 using FELauncher.Engine.Settings;
-using FELauncher.Shared.Contracts;
+using FELauncher.Shared.Contracts.Sessions;
 using Microsoft.Extensions.Logging;
 
 namespace FELauncher.Engine.Processes

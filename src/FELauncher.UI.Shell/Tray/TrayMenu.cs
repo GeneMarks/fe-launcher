@@ -24,7 +24,8 @@ namespace FELauncher.UI.Shell.Tray
 
             using var menu = PInvoke.CreatePopupMenu_SafeHandle();
 
-            PopulateMenu(menu, handler.IsSessionActive, handler.CanEndSession);
+            var state = handler.GetSessionState();
+            PopulateMenu(menu, state.IsActive, state.CanRequestStop);
 
             // Foreground must be set to current HWND,
             // otherwise menu doesn't close when clicking outside it.

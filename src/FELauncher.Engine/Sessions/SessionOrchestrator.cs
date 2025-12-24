@@ -3,6 +3,7 @@ using FELauncher.Engine.JobObjects;
 using FELauncher.Engine.Processes;
 using FELauncher.Engine.Settings;
 using FELauncher.Shared.Contracts;
+using FELauncher.Shared.Contracts.Sessions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -21,28 +22,6 @@ namespace FELauncher.Engine.Sessions
         private CancellationTokenSource? _sessionCts;
         private bool _shutdownRequested;
         private readonly Lock _sessionLock = new();
-
-        public bool IsSessionActive
-        {
-            get
-            {
-                lock (_sessionLock)
-                {
-                    return _session?.IsActive == true;
-                }
-            }
-        }
-
-        public bool CanEndSession
-        {
-            get
-            {
-                lock (_sessionLock)
-                {
-                    return _session?.CanRequestStop == true;
-                }
-            }
-        }
 
         public async Task StartNewSessionAsync()
         {
@@ -168,6 +147,29 @@ namespace FELauncher.Engine.Sessions
             }
 
             cts?.Cancel();
+        }
+
+        public SessionStateSnapshot GetSessionState()
+        {
+            lock (_sessionLock)
+            {
+                var s = _session;
+
+                if (s is null)
+                {
+                    return new SessionStateSnapshot(
+                        Id: null,
+                        Status: SessionStatus.Created,
+                        IsActive: false,
+                        CanRequestStop: false);
+                }
+
+                return new SessionStateSnapshot(
+                    Id: s.Id,
+                    Status: s.Status,
+                    IsActive: s.IsActive,
+                    CanRequestStop: s.CanRequestStop);
+            }
         }
 
         private async Task StopSessionAsync()
