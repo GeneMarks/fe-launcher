@@ -9,16 +9,16 @@ namespace FELauncher.UI.Shell.Tray
     internal sealed class TrayActionHandler(
         ILogger<TrayActionHandler> logger,
         IHostApplicationLifetime lifetime,
-        ISessionManager sessionManager)
+        ISessionOrchestrator sessionOrchestrator)
     {
-        public bool IsSessionActive => sessionManager.IsSessionActive;
-        public bool CanEndSession => sessionManager.CanEndSession;
+        public bool IsSessionActive => sessionOrchestrator.IsSessionActive;
+        public bool CanEndSession => sessionOrchestrator.CanEndSession;
 
         public void LaunchFrontend()
-            => sessionManager.StartNewSessionAsync();
+            => sessionOrchestrator.StartNewSessionAsync();
 
         public void EndSession()
-            => sessionManager.RequestEndSession();
+            => sessionOrchestrator.RequestEndSession();
 
         public void OpenSettings()
         {

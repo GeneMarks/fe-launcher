@@ -8,13 +8,13 @@ using Microsoft.Extensions.Options;
 
 namespace FELauncher.Engine.Sessions
 {
-    internal sealed class SessionManager(
-        ILogger<SessionManager> logger,
+    internal sealed class SessionOrchestrator(
+        ILogger<SessionOrchestrator> logger,
         ISessionLoggerScopeProvider sessionLoggerScopeProvider,
         IOptionsMonitor<FELauncherSettings> settings,
         INotifier notifier,
         JobObjectManager jobObjectManager,
-        ProcessRunner processRunner) : ISessionManager
+        ProcessRunner processRunner) : ISessionOrchestrator
     {
         private Session? _session;
         private FELauncherSettings? _sessionSettings;
