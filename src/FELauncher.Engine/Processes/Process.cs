@@ -36,7 +36,7 @@ namespace FELauncher.Engine.Processes
         }
 
         /// <summary>
-        /// Creates a native windows process in the provided job handle and registers a wait callback.
+        /// Creates a native Windows process in the provided job handle and registers a wait callback.
         /// </summary>
         /// <param name="safeJobHandle">Handle to a job object the process will be assigned to.</param>
         /// <exception cref="ProcessException">
