@@ -19,6 +19,7 @@ namespace FELauncher.Engine.Sessions
         private Session? _session;
         private FELauncherSettings? _sessionSettings;
         private CancellationTokenSource? _sessionCts;
+        private bool _shutdownRequested;
         private readonly Lock _sessionLock = new();
 
         public bool IsSessionActive
@@ -45,6 +46,8 @@ namespace FELauncher.Engine.Sessions
 
         public async Task StartNewSessionAsync()
         {
+            CancellationToken ct;
+
             lock (_sessionLock)
             {
                 if (_session?.IsActive == true)
@@ -59,10 +62,10 @@ namespace FELauncher.Engine.Sessions
                     Status = SessionStatus.Starting
                 };
 
+                _shutdownRequested = false;
                 _sessionCts = new CancellationTokenSource();
+                ct = _sessionCts.Token;
             }
-
-            var ct = _sessionCts.Token;
 
             sessionLoggerScopeProvider.SetCurrentSessionId(_session.Id);
             using var sessionScope = sessionLoggerScopeProvider.BeginSessionScope(logger);
@@ -140,21 +143,31 @@ namespace FELauncher.Engine.Sessions
             }
             finally
             {
-                _sessionCts.Dispose();
-                _sessionSettings = null;
-                _sessionCts = null;
                 processRunner.RunnerProcessExited -= OnRunnerProcessExited;
+
+                lock (_sessionLock)
+                {
+                    _sessionCts.Dispose();
+                    _sessionSettings = null;
+                    _sessionCts = null;
+                }
                 // sessionLoggerScopeProvider.SetCurrentSessionId(null);
             }
         }
 
         public void RequestEndSession()
         {
+            CancellationTokenSource? cts;
+
             lock (_sessionLock)
             {
                 if (_session?.CanRequestStop != true) return;
-                _sessionCts?.Cancel();
+
+                _shutdownRequested = true;
+                cts = _sessionCts;
             }
+
+            cts?.Cancel();
         }
 
         private async Task StopSessionAsync()
@@ -187,16 +200,33 @@ namespace FELauncher.Engine.Sessions
 
         private void OnRunnerProcessExited(object? sender, RunnerProcessExitedEventArgs e)
         {
-            // Only send notification when process exits during a session that is in a cancellable state
-            if (e.NotifyOnExit && CanEndSession)
+            bool shouldEndSession;
+
+            lock (_sessionLock)
+            {
+                // Don't do anything when not in a cancelable active session
+                if (_session?.CanRequestStop != true || _shutdownRequested) return;
+
+                shouldEndSession = e.EndSessionOnExit && _shutdownRequested == false;
+
+                if (shouldEndSession) _shutdownRequested = true;
+            }
+
+            if (shouldEndSession)
+            {
+                RequestEndSession();
+                notifier.Notify(
+                    "Ending Session",
+                    $"Ending the current session because '{e.ProcessName}' has terminated.");
+                return;
+            }
+
+            if (e.NotifyOnExit)
             {
                 notifier.Notify(
                     "Process Exited",
                     $"'{e.ProcessName}' has terminated.");
             }
-
-
-            //if (e.EndSessionOnExit) RequestEndSession();
         }
     }
 }
