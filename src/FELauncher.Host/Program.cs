@@ -64,7 +64,7 @@ class Program
         {
             config = new ConfigurationBuilder()
                 .SetBasePath(AppContext.BaseDirectory)
-                .AddJsonFile(AppPaths.SettingsFile)
+                .AddJsonFile(AppPaths.SettingsFile, optional: false, reloadOnChange: true)
                 .Build();
         }
         catch (Exception ex)
