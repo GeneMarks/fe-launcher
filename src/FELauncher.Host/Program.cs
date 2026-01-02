@@ -104,6 +104,8 @@ class Program
 
         try
         {
+            Log.Information("Starting FE Launcher...");
+
             var builder = Host.CreateApplicationBuilder();
 
             builder.Configuration.Sources.Clear();
