@@ -18,7 +18,7 @@ namespace FELauncher.UI.Shell.Tray
             => await sessionOrchestrator.StartNewSessionAsync();
 
         public void EndSession()
-            => sessionOrchestrator.RequestEndSession();
+            => sessionOrchestrator.RequestCancelSession();
 
         public void OpenSettings()
         {

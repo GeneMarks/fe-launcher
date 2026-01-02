@@ -134,7 +134,7 @@ namespace FELauncher.Engine.Sessions
             }
         }
 
-        public void RequestEndSession()
+        public void RequestCancelSession()
         {
             CancellationTokenSource? cts;
 

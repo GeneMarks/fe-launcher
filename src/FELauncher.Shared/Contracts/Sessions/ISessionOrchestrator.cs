@@ -10,7 +10,7 @@
         /// <summary>
         /// Requests cancellation from the cancellation token source if the session is in a cancelable state.
         /// </summary>
-        void RequestEndSession();
+        void RequestCancelSession();
 
         /// <summary>
         /// Returns an immutable snapshot of the current session state.
