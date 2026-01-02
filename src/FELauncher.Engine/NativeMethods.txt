@@ -12,6 +12,7 @@ InitializeProcThreadAttributeList
 IsProcessInJob
 PostMessage
 PostQueuedCompletionStatus
+QueryInformationJobObject
 RegisterWaitForSingleObject
 SetInformationJobObject
 TerminateJobObject
@@ -19,8 +20,9 @@ UnregisterWait
 UpdateProcThreadAttribute
 INFINITE
 INVALID_HANDLE_VALUE
-JOBOBJECT_ASSOCIATE_COMPLETION_PORT
 JOBOBJECTINFOCLASS
+JOBOBJECT_ASSOCIATE_COMPLETION_PORT
+JOBOBJECT_BASIC_ACCOUNTING_INFORMATION
 JOB_OBJECT_MSG_*
 PROC_THREAD_ATTRIBUTE_*
 PROCESS_CREATION_FLAGS
