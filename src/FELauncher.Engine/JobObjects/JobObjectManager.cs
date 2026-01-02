@@ -55,7 +55,7 @@ namespace FELauncher.Engine.JobObjects
         /// Asynchronously waits until the current job object has no remaining active processes.
         /// </summary>
         /// <remarks>
-        /// Internally sets up an I/O completion port for the job object and blocks on completion status on a background thread.
+        /// Internally ensures an I/O completion port for the job object exists and blocks on completion status on a background thread.
         /// </remarks>
         /// <returns>
         /// A task that completes when there are no more active processes in the current job object.
@@ -74,7 +74,7 @@ namespace FELauncher.Engine.JobObjects
                 throw new JobObjectException("Tried to wait for completion of null or invalid job handle.");
             }
 
-            SetupIOCompletionPort();
+            EnsureIOCompletionPortSetup();
 
             await Task.Run(() => WaitForCompletionStatus(ct), CancellationToken.None);
         }
@@ -171,8 +171,11 @@ namespace FELauncher.Engine.JobObjects
             return safeJobHandle;
         }
 
-        private unsafe void SetupIOCompletionPort()
+        private unsafe void EnsureIOCompletionPortSetup()
         {
+            if (_safeCompletionPortHandle is not null
+                && !_safeCompletionPortHandle.IsInvalid) return;
+
             _safeCompletionPortHandle = PInvoke.CreateIoCompletionPort(
                 new SafeFileHandle(HANDLE.INVALID_HANDLE_VALUE, false), null, 0, 1);
 
