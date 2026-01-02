@@ -145,7 +145,7 @@ namespace FELauncher.Engine.JobObjects
                 return;
             }
 
-            if (!PInvoke.TerminateJobObject(_safeJobHandle, 0))
+            if (!PInvoke.TerminateJobObject(_safeJobHandle, EngineConstants.JobTerminationExitCode))
             {
                 var errorCode = Marshal.GetLastPInvokeError();
                 var win32Ex = new Win32Exception(errorCode);
