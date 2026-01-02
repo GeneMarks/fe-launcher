@@ -212,6 +212,26 @@ namespace FELauncher.Engine.JobObjects
         // Queued completion status loop is blocking.
         private unsafe void WaitForCompletionStatus(CancellationToken ct)
         {
+            var jobHandle = (HANDLE)_safeJobHandle!.DangerousGetHandle();
+            JOBOBJECT_BASIC_ACCOUNTING_INFORMATION info;
+
+            if (!PInvoke.QueryInformationJobObject(
+                jobHandle, JOBOBJECTINFOCLASS.JobObjectBasicAccountingInformation,
+                &info, (uint)sizeof(JOBOBJECT_BASIC_ACCOUNTING_INFORMATION)))
+            {
+                var errorCode = Marshal.GetLastPInvokeError();
+                logger.FailedToQueryJobObjectInfoInWait(errorCode, new Win32Exception(errorCode));
+                return;
+            }
+
+            // Don't listen for completion status if there are
+            // no processes in the job object.
+            if (info.ActiveProcesses == 0)
+            {
+                logger.NoActiveProcsInJobInWait();
+                return;
+            }
+
             using var reg = ct.Register(() =>
                 // Posts a dummy completion packet to break loop
                 _ = PInvoke.PostQueuedCompletionStatus(_safeCompletionPortHandle, 0, 0, null));
@@ -228,7 +248,7 @@ namespace FELauncher.Engine.JobObjects
                     PInvoke.INFINITE))
                 {
                     var errorCode = Marshal.GetLastPInvokeError();
-                    logger.FailedToGetCompletionStatus(errorCode, new Win32Exception(errorCode));
+                    logger.FailedToGetCompletionStatusInWait(errorCode, new Win32Exception(errorCode));
                     return;
                 }
 
@@ -238,7 +258,7 @@ namespace FELauncher.Engine.JobObjects
                     ct.ThrowIfCancellationRequested();
                 }
 
-                if ((HANDLE)completionKey == (HANDLE)_safeJobHandle!.DangerousGetHandle()
+                if ((HANDLE)completionKey == jobHandle
                     && completionCode == PInvoke.JOB_OBJECT_MSG_ACTIVE_PROCESS_ZERO)
                 {
                     return;
