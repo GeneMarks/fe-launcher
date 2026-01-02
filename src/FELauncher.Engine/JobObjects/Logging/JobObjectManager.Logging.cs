@@ -66,7 +66,7 @@ namespace FELauncher.Engine.JobObjects.Logging
 
         [LoggerMessage(
             Level = LogLevel.Debug,
-            Message = "Job object does not contain any active jobs. Not entering wait loop.")]
+            Message = "Job object does not contain any active processes. Not entering wait loop.")]
         public static partial void NoActiveProcsInJobInWait(this ILogger logger);
 
         [LoggerMessage(
