@@ -43,18 +43,27 @@ namespace FELauncher.Engine.Sessions
             }
         }
 
+        public string PrettyRuntime
+        {
+            get
+            {
+                var rt = Runtime;
+                return $"{(int)rt.TotalHours} hrs {rt.Minutes:00} min {rt.Seconds:00} sec";
+            }
+        }
+
         private SessionStatus _status = SessionStatus.Created;
         private long _startTime;
         private long _endTime;
 
-        public bool IsActive =>
-            Status is not (SessionStatus.Created
+        public bool IsActive
+            => Status is not (SessionStatus.Created
                         or SessionStatus.Completed
                         or SessionStatus.Aborted
                         or SessionStatus.Failed);
 
-        public bool CanRequestStop =>
-            Status is not (SessionStatus.Created
+        public bool CanRequestStop
+            => Status is not (SessionStatus.Created
                         or SessionStatus.Stopping
                         or SessionStatus.Completed
                         or SessionStatus.Aborted
