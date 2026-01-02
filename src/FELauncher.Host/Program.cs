@@ -1,4 +1,5 @@
 ﻿using FELauncher.Engine;
+using FELauncher.Host;
 using FELauncher.Host.Bootstrap;
 using FELauncher.Host.Exceptions;
 using FELauncher.Shared;
@@ -77,7 +78,7 @@ class Program
 
         try
         {
-            var logEventLevel = ParseLogEventLevel(config["FELauncher:LogLevel"]);
+            var logEventLevel = ParseLogEventLevel(config["FELauncher:LogLevel"], out bool couldParseLogEventLevel);
 
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Is(logEventLevel)
@@ -93,6 +94,11 @@ class Program
                     fileSizeLimitBytes: AppConstants.LogFileSizeLimit,
                     retainedFileCountLimit: AppConstants.LogFileCountLimit)
                 .CreateLogger();
+
+            if (!couldParseLogEventLevel)
+            {
+                Log.Information($"Could not parse LogEventLevel. Setting default level to '{HostConstants.DefaultLogEventLevel}'.");
+            }
         }
         catch (Exception ex)
         {
@@ -137,14 +143,16 @@ class Program
         }
     }
 
-    private static LogEventLevel ParseLogEventLevel(string? level)
+    private static LogEventLevel ParseLogEventLevel(string? level, out bool couldParse)
     {
         if (Enum.TryParse(
             level, ignoreCase: true, out LogEventLevel logEventLevel))
         {
+            couldParse = true;
             return logEventLevel;
         }
 
-        return LogEventLevel.Information;
+        couldParse = false;
+        return HostConstants.DefaultLogEventLevel;
     }
 }
