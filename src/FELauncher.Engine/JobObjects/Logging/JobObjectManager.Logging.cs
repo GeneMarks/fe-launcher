@@ -26,7 +26,7 @@ namespace FELauncher.Engine.JobObjects.Logging
 
         [LoggerMessage(
             Level = LogLevel.Error,
-            Message = "Failed to query job object information. Not entering wait loop. Win32Error: {Win32ErrorCode}")]
+            Message = "Failed to query job object information. Skipping wait loop. Win32Error: {Win32ErrorCode}")]
         public static partial void FailedToQueryJobObjectInfoInWait(this ILogger logger, int win32ErrorCode, Exception ex);
 
         [LoggerMessage(
@@ -66,7 +66,7 @@ namespace FELauncher.Engine.JobObjects.Logging
 
         [LoggerMessage(
             Level = LogLevel.Debug,
-            Message = "Job object does not contain any active processes. Not entering wait loop.")]
+            Message = "Job object does not contain any active processes. Skipping wait loop.")]
         public static partial void NoActiveProcsInJobInWait(this ILogger logger);
 
         [LoggerMessage(
