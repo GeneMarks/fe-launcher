@@ -2,6 +2,6 @@
 {
 	public interface IPathResolver
 	{
-		public string ResolvePath(string? path);
+		string ResolvePath(string? path);
 	}
 }
