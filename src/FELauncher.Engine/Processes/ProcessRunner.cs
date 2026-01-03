@@ -14,54 +14,153 @@ namespace FELauncher.Engine.Processes
     {
         public event EventHandler<RunnerProcessExitedEventArgs>? RunnerProcessExited;
 
-        private readonly Dictionary<Process, ProcessSettings> _running = [];
+        private readonly Dictionary<Process, ProcessRunItem> _running = [];
+        private readonly Lock _runningLock = new();
 
-        public async Task RunAsync(ProcessSettings processSettings, CancellationToken ct = default)
+        public bool TryBuildProcessRun(
+            ProcessSettings settings,
+            out ProcessRun? run,
+            out ProcessCreationFailure? failure,
+            CancellationToken ct = default)
         {
             ct.ThrowIfCancellationRequested();
 
-            var process = factory.Create(processSettings.Path, processSettings.Arguments);
-            await StartAndTrackAsync(process, processSettings, ct);
+            run = null;
+            failure = null;
+
+            if (!factory.TryCreate(settings.Path, settings.Arguments,
+                out var process, out var processCreationFailure))
+            {
+                failure = processCreationFailure!;
+                return false;
+            }
+
+            var item = new ProcessRunItem(process!, settings);
+            run = new([item]);
+            return true;
         }
 
-        public async Task RunAsync(IList<ProcessSettings> processSettingsList, CancellationToken ct = default)
+        public bool TryBuildProcessRun(
+            IList<ProcessSettings> settingsList,
+            out ProcessRun? run,
+            out IList<ProcessCreationFailure> failures,
+            CancellationToken ct = default)
         {
-            foreach (var processSettings in processSettingsList)
+            run = null;
+            failures = [];
+            List<ProcessRunItem> items = [];
+
+            bool success = true;
+
+            foreach (var settings in settingsList)
             {
-                await RunAsync(processSettings, ct);
+                ct.ThrowIfCancellationRequested();
+
+                if (!factory.TryCreate(settings.Path, settings.Arguments,
+                    out var process, out var processCreationFailure))
+                {
+                    failures.Add(processCreationFailure!);
+                    success = false;
+                    continue;
+                }
+
+                items.Add(new(process!, settings));
+            }
+
+            if (success)
+            {
+                run = new(items);
+            }
+
+            return success;
+        }
+
+        public async Task RunAsync(ProcessRun processRun, CancellationToken ct = default)
+        {
+            var items = processRun.Items;
+
+            if (items.Count == 0)
+            {
+                logger.NoProcessesInProcessRun();
+                return;
+            }
+
+            foreach (var item in items)
+            {
+                ct.ThrowIfCancellationRequested();
+                await StartProcessItemAsync(item, ct);
             }
         }
 
-        private async Task StartAndTrackAsync(
-            Process process,
-            ProcessSettings processSettings,
+        public void Reset()
+        {
+            lock (_runningLock)
+            {
+                foreach (var p in _running.Keys)
+                {
+                    p.Exited -= OnProcessExited;
+                }
+
+                _running.Clear();
+            }
+        }
+
+        private async Task StartProcessItemAsync(
+            ProcessRunItem item,
             CancellationToken ct = default)
         {
-            _running.Add(process, processSettings);
-            process.Exited += OnProcessExited;
+            var process = item.Process;
+            var processSettings = item.ProcessSettings;
 
-            var delayTime = TimeSpan.FromSeconds(processSettings.DelaySeconds);
+            var delaySeconds = processSettings.DelaySeconds;
+            var delayTime = TimeSpan.FromSeconds(delaySeconds);
             if (delayTime > TimeSpan.Zero)
             {
+                logger.WaitingDelay(delaySeconds, process.PrettyName, process.PathWithArgs);
                 await Task.Delay(delayTime, ct);
             }
 
-            process.StartInJob(jobObjectManager.SafeJobHandle);
+            lock (_runningLock)
+            {
+                _running.Add(process, item);
+                process.Exited += OnProcessExited;
+            }
+
+            try
+            {
+                ct.ThrowIfCancellationRequested();
+
+                logger.StartingProcess(process.PrettyName, process.PathWithArgs);
+                process.StartInJob(jobObjectManager.SafeJobHandle);
+            }
+            catch
+            {
+                lock (_runningLock)
+                {
+                    process.Exited -= OnProcessExited;
+                    _running.Remove(process);
+                }
+                throw;
+            }
         }
 
         private void OnProcessExited(object? sender, ProcessExitedEventArgs e)
         {
-            if (_running.Count == 0) return;
+            var process = (Process)sender!;
 
-            var senderProc = (Process)sender!;
-            senderProc.Exited -= OnProcessExited;
+            ProcessRunItem? item;
+            lock (_runningLock)
+            {
+                if (!_running.TryGetValue(process, out item)) return;
 
-            if (!_running.TryGetValue(senderProc, out var processSettings)) return;
-
-            _running.Remove(senderProc);
+                _running.Remove(process);
+                process.Exited -= OnProcessExited;
+            }
 
             using var sessionScope = sessionLoggerScopeProvider.BeginSessionScope(logger);
-            logger.ProcessExited(e.ProcessId, e.ProcessPath, e.ExitCode);
+            logger.ProcessExited(e.ProcessId, e.ProcessPathWithArgs, e.ExitCode);
+
+            var processSettings = item.ProcessSettings;
 
             RunnerProcessExited?.Invoke(this, new RunnerProcessExitedEventArgs
             {

@@ -1,5 +1,4 @@
-﻿using FELauncher.Engine.Exceptions;
-using FELauncher.Engine.Processes.Logging;
+﻿using FELauncher.Engine.Processes.Logging;
 using FELauncher.Shared.Contracts;
 using Microsoft.Extensions.Logging;
 
@@ -11,42 +10,60 @@ namespace FELauncher.Engine.Processes
         IPathResolver pathResolver)
     {
         /// <summary>
-        /// Validates the executable path and arguments and returns a <see cref="Process"/> configured to start
-        /// from the executable's directory as its working directory.
+        /// Attempts to validate the provided executable path and arguments and, if successful, creates
+        /// a <see cref="Process"/> configured to start from the executable's directory.
         /// </summary>
-        /// <param name="executablePath">The system path to a valid executable file.</param>
+        /// <param name="executablePath">The configured path to the executable.</param>
         /// <param name="arguments">The command-line arguments used when starting the executable.</param>
-        /// <returns>A configured <see cref="Process"/> instance.</returns>
-        /// <exception cref="ProcessCreationException">
-        /// Thrown when the path is null/empty, does not have the required extension, or does not exist.
-        /// </exception>
-        public Process Create(string? executablePath, string? arguments)
+        /// <param name="process">
+        /// Contains the created <see cref="Process"/> instance if the method returns <c>true</c>,
+        /// otherwise contains <c>null</c>.
+        /// </param>
+        /// <param name="processCreationFailure">
+        /// Contains information describing why process creation failed if the method returns <c>false</c>,
+        /// otherwise contains <c>null</c>.
+        /// </param>
+        /// <returns>
+        /// <c>true</c> if the process was successfully validated and created, otherwise <c>false</c>.
+        /// </returns>
+        public bool TryCreate(
+            string? executablePath, string? arguments,
+            out Process? process, out ProcessCreationFailure? processCreationFailure)
         {
+            process = null;
+            processCreationFailure = null;
+
             var path = pathResolver.ResolvePath(executablePath);
 
             if (string.IsNullOrEmpty(path))
             {
                 logger.EmptyPath();
-                throw new ProcessCreationException("Executable path is null or empty.");
+                processCreationFailure = new ProcessCreationFailure(ProcessCreationFailureReason.EmptyPath);
+                return false;
             }
+
+            var fileName = Path.GetFileName(path);
 
             if (Path.GetExtension(path) is not EngineConstants.ExecutableExtension)
             {
                 logger.InvalidFileExt(path, EngineConstants.ExecutableExtension);
-                throw new ProcessCreationException($"Executable '{path}' does not contain required file extension: {EngineConstants.ExecutableExtension}");
+                processCreationFailure = new ProcessCreationFailure(ProcessCreationFailureReason.InvalidFileExt, fileName);
+                return false;
             }
 
             if (!File.Exists(path))
             {
                 logger.FileNotPresent(path);
-                throw new ProcessCreationException($"The specified file '{path}' does not exist.");
+                processCreationFailure = new ProcessCreationFailure(ProcessCreationFailureReason.FileNotPresent, fileName);
+                return false;
             }
 
             var pathWithArgs = string.IsNullOrEmpty(arguments) ? path : path + " " + arguments.Trim();
             var workingDir = Path.GetDirectoryName(path);
             var prettyName = Path.GetFileNameWithoutExtension(path);
 
-            return new Process(win32ProcessLogger, pathWithArgs, workingDir, prettyName);
+            process = new Process(win32ProcessLogger, pathWithArgs, workingDir, prettyName);
+            return true;
         }
     }
 }

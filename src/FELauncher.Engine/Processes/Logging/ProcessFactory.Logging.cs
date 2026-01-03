@@ -11,7 +11,7 @@ namespace FELauncher.Engine.Processes.Logging
 
         [LoggerMessage(
             Level = LogLevel.Error,
-            Message = "The file '{FilePath}' is not an executable.\nRequired file type: {RequiredExtension}")]
+            Message = "The file '{FilePath}' is not a valid executable.\nRequired file type: {RequiredExtension}")]
         public static partial void InvalidFileExt(this ILogger logger, string filePath, string requiredExtension);
 
         [LoggerMessage(

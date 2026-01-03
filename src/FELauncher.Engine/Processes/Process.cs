@@ -16,12 +16,13 @@ namespace FELauncher.Engine.Processes
 
         private readonly ILogger<Process> _logger;
 
-        private readonly string _pathWithArgs;
         private readonly string? _workingDir;
-        private readonly string _prettyName;
         private SafeFileHandle? _safeProcHandle;
         private SafeFileHandle? _safeWaitHandle;
         private uint _pid;
+
+        public string PathWithArgs { get; }
+        public string PrettyName { get; }
 
         public Process(
             ILogger<Process> logger,
@@ -30,9 +31,9 @@ namespace FELauncher.Engine.Processes
             string prettyName)
         {
             _logger = logger;
-            _pathWithArgs = pathWithArgs;
+            PathWithArgs = pathWithArgs;
             _workingDir = workingDir;
-            _prettyName = prettyName;
+            PrettyName = prettyName;
         }
 
         /// <summary>
@@ -59,8 +60,8 @@ namespace FELauncher.Engine.Processes
                     var errorCode = Marshal.GetLastPInvokeError();
                     var win32Ex = new Win32Exception(errorCode);
 
-                    _logger.FailedToInitializeAttributeList(_pathWithArgs, errorCode, win32Ex);
-                    throw new ProcessException($"Failed to initialize process attribute list for process with path '{_pathWithArgs}'.", win32Ex);
+                    _logger.FailedToInitializeAttributeList(PathWithArgs, errorCode, win32Ex);
+                    throw new ProcessException($"Failed to initialize process attribute list for process with path '{PathWithArgs}'.", win32Ex);
                 }
 
                 HANDLE jobHandle = (HANDLE)safeJobHandle.DangerousGetHandle();
@@ -71,8 +72,8 @@ namespace FELauncher.Engine.Processes
                     var errorCode = Marshal.GetLastPInvokeError();
                     var win32Ex = new Win32Exception(errorCode);
 
-                    _logger.FailedToUpdateAttributeList(_pathWithArgs, errorCode, win32Ex);
-                    throw new ProcessException($"Failed to update process attribute list for process with path '{_pathWithArgs}'.", win32Ex);
+                    _logger.FailedToUpdateAttributeList(PathWithArgs, errorCode, win32Ex);
+                    throw new ProcessException($"Failed to update process attribute list for process with path '{PathWithArgs}'.", win32Ex);
                 }
 
                 STARTUPINFOEXW siex = new()
@@ -81,7 +82,7 @@ namespace FELauncher.Engine.Processes
                 };
                 siex.StartupInfo.cb = (uint)sizeof(STARTUPINFOEXW);
 
-                char[] cmd = (_pathWithArgs + '\0').ToCharArray();
+                char[] cmd = (PathWithArgs + '\0').ToCharArray();
                 Span<char> lpCommandLine = cmd;
                 PROCESS_INFORMATION pi;
 
@@ -93,8 +94,8 @@ namespace FELauncher.Engine.Processes
                     var errorCode = Marshal.GetLastPInvokeError();
                     var win32Ex = new Win32Exception(errorCode);
 
-                    _logger.FailedToCreateProcess(_pathWithArgs, errorCode, win32Ex);
-                    throw new ProcessException($"Failed to create process with path '{_pathWithArgs}'.", win32Ex);
+                    _logger.FailedToCreateProcess(PathWithArgs, errorCode, win32Ex);
+                    throw new ProcessException($"Failed to create process with path '{PathWithArgs}'.", win32Ex);
                 }
 
                 _safeProcHandle = new SafeFileHandle(pi.hProcess, true);
@@ -107,8 +108,8 @@ namespace FELauncher.Engine.Processes
                     var errorCode = Marshal.GetLastPInvokeError();
                     var win32Ex = new Win32Exception(errorCode);
 
-                    _logger.FailedToRegisterWaitOperation(_pid, _pathWithArgs, errorCode, win32Ex);
-                    throw new ProcessException($"Failed to register wait operation for pid {_pid} ({_pathWithArgs}).", win32Ex);
+                    _logger.FailedToRegisterWaitOperation(_pid, PathWithArgs, errorCode, win32Ex);
+                    throw new ProcessException($"Failed to register wait operation for pid {_pid} ({PathWithArgs}).", win32Ex);
                 }
             }
             finally
@@ -128,10 +129,10 @@ namespace FELauncher.Engine.Processes
 
             Exited?.Invoke(this, new ProcessExitedEventArgs()
             {
-                ProcessId   = _pid,
-                ProcessPath = _pathWithArgs,
-                ProcessName = _prettyName,
-                ExitCode    = exitCode
+                ProcessId           = _pid,
+                ProcessPathWithArgs = PathWithArgs,
+                ProcessName         = PrettyName,
+                ExitCode            = exitCode
             });
         }
 

@@ -21,7 +21,7 @@ namespace FELauncher.Engine.Processes.Logging
 
         [LoggerMessage(
             Level = LogLevel.Error,
-            Message = "Failed to register wait operation for pid {ProcessId} ({ProcessPath}). Win32Error: {Win32ErrorCode}")]
+            Message = "Failed to register wait operation for PID {ProcessId} ({ProcessPath}). Win32Error: {Win32ErrorCode}")]
         public static partial void FailedToRegisterWaitOperation(this ILogger logger, uint processId, string processPath, int win32ErrorCode, Exception ex);
     }
 }
