@@ -1,6 +1,7 @@
 ﻿using FELauncher.Engine.Exceptions;
 using FELauncher.Engine.JobObjects;
 using FELauncher.Engine.Processes;
+using FELauncher.Engine.Sessions.Logging;
 using FELauncher.Engine.Settings;
 using FELauncher.Shared.Contracts;
 using FELauncher.Shared.Contracts.Sessions;
@@ -20,8 +21,19 @@ namespace FELauncher.Engine.Sessions
         private Session? _session;
         private FELauncherSettings? _sessionSettings;
         private CancellationTokenSource? _sessionCts;
-        private bool _shutdownRequested;
         private readonly Lock _sessionLock = new();
+
+        public SessionStateSnapshot GetSessionState()
+        {
+            Session? s;
+            lock (_sessionLock) s = _session;
+
+            return new SessionStateSnapshot(
+                Id: s?.Id,
+                Status: s?.Status ?? SessionStatus.Created,
+                IsActive: s?.IsActive ?? false,
+                CanRequestStop: s?.CanRequestStop ?? false);
+        }
 
         public async Task StartNewSessionAsync()
         {
@@ -31,8 +43,7 @@ namespace FELauncher.Engine.Sessions
             {
                 if (_session?.IsActive == true)
                 {
-                    // cannot start new session when current session is active
-                    // todo: log, possibly toast
+                    logger.CannotStartMultipleSessions();
                     return;
                 }
 
@@ -41,9 +52,10 @@ namespace FELauncher.Engine.Sessions
                     Status = SessionStatus.Starting
                 };
 
-                _shutdownRequested = false;
                 _sessionCts = new CancellationTokenSource();
                 ct = _sessionCts.Token;
+
+                logger.StartingNewSession(_session.Id);
             }
 
             sessionLoggerScopeProvider.SetCurrentSessionId(_session.Id);
@@ -53,84 +65,99 @@ namespace FELauncher.Engine.Sessions
             {
                 _sessionSettings = settings.CurrentValue;
 
-                processRunner.RunnerProcessExited += OnRunnerProcessExited;
+                ProcessRun? preProcessRun;
+                ProcessRun? frontendRun;
+                List<string> processRunBuildErrors = [];
+
+                if (!processRunner.TryBuildProcessRun(
+                    _sessionSettings.PreProcesses, 
+                    out preProcessRun,
+                    out var preProcessBuildFailures, ct))
+                {
+                    foreach (var fail in preProcessBuildFailures)
+                    {
+                        processRunBuildErrors.Add(GetProcessRunBuildFailMessage(fail));
+                    }
+                }
+
+                if (!processRunner.TryBuildProcessRun(
+                    _sessionSettings.Frontend,
+                    out frontendRun,
+                    out var frontendBuildFailure, ct))
+                {
+                    processRunBuildErrors.Add(GetProcessRunBuildFailMessage(frontendBuildFailure!));
+                }
+
+                if (processRunBuildErrors.Count > 0)
+                {
+                    foreach (var error in processRunBuildErrors)
+                    {
+                        notifier.Notify("Process Configuration Error", error);
+                    }
+
+                    lock (_sessionLock) _session.Status = SessionStatus.Failed;
+                    return;
+                }
+
                 jobObjectManager.ResetJobObject();
+                processRunner.RunnerProcessExited += OnRunnerProcessExited;
 
                 /* Pre-hooks */
                 // session.Status = SessionStatus.RunningPreHooks;
 
-                lock (_sessionLock)
-                {
-                    _session.Status = SessionStatus.RunningPreProcesses;
-                }
-                await processRunner.RunAsync(_sessionSettings.PreProcesses, ct);
+                lock (_sessionLock) _session.Status = SessionStatus.RunningPreProcesses;
 
-                lock (_sessionLock)
-                {
-                    _session.Status = SessionStatus.RunningFrontend;
-                }
-                await processRunner.RunAsync(_sessionSettings.Frontend, ct);
+                logger.RunningPreProcesses(_sessionSettings.PreProcesses.Count);
+                await processRunner.RunAsync(preProcessRun!, ct);
 
-                // Wait for all processes to exit naturally.
+                lock (_sessionLock) _session.Status = SessionStatus.RunningFrontend;
+
+                logger.StartingFrontend();
+                await processRunner.RunAsync(frontendRun!, ct);
+
+                logger.WaitingForSessionCompletion();
                 await jobObjectManager.WaitForJobObjectCompletionAsync(ct);
 
+                // This is going to have to run no matter what..
                 /* Post-hooks */
                 // session.Status = SessionStatus.RunningPostHooks;
 
-                lock (_sessionLock)
-                {
-                    _session.Status = SessionStatus.Completed;
-                }
+                lock (_sessionLock) _session.Status = SessionStatus.Completed;
             }
             catch (OperationCanceledException) when (ct.IsCancellationRequested)
             {
-                await StopSessionAsync();
-                lock (_sessionLock)
-                {
-                    _session.Status = SessionStatus.Aborted;
-                }
+                logger.StoppingSession();
+                await StopSessionAsync(SessionStatus.Aborted);
             }
-            catch (JobObjectException ex)
+            catch (Exception ex) when (
+                ex is JobObjectException
+                || ex is ProcessException)
             {
-                // cancel session run
-                lock (_sessionLock)
-                {
-                    _session.Status = SessionStatus.Failed;
-                }
-                // log here
-                // toast here or task dialog?
-            }
-            catch (ProcessCreationException ex)
-            {
-                // cancel session run
-                lock (_sessionLock)
-                {
-                    _session.Status = SessionStatus.Failed;
-                }
-                // log here
-                // toast here or task dialog?
+                logger.FatalSessionError(ex.GetType().Name);
+                notifier.Notify("Unexpected Error", "Ending the current session. Please see log for more details.");
+                await StopSessionAsync(SessionStatus.Failed);
             }
             catch (Exception ex)
             {
-                await StopSessionAsync();
-                lock (_sessionLock)
-                {
-                    _session.Status = SessionStatus.Failed;
-                }
-                // log here
-                // toast here or task dialog?
+                logger.UnknownFatalSessionError(ex);
+                notifier.Notify("Unexpected Error", "Ending the current session. Please see log for more details.");
+                await StopSessionAsync(SessionStatus.Failed);
             }
             finally
             {
                 processRunner.RunnerProcessExited -= OnRunnerProcessExited;
+                processRunner.Reset();
 
                 lock (_sessionLock)
                 {
+                    logger.SessionFinalRuntime(_session.Id, _session.Status, _session.PrettyRuntime);
+
                     _sessionCts.Dispose();
-                    _sessionSettings = null;
                     _sessionCts = null;
+                    _sessionSettings = null;
                 }
-                // sessionLoggerScopeProvider.SetCurrentSessionId(null);
+
+                sessionLoggerScopeProvider.SetCurrentSessionId(null);
             }
         }
 
@@ -141,85 +168,76 @@ namespace FELauncher.Engine.Sessions
             lock (_sessionLock)
             {
                 if (_session?.CanRequestStop != true) return;
-
-                _shutdownRequested = true;
                 cts = _sessionCts;
             }
 
             cts?.Cancel();
         }
 
-        public SessionStateSnapshot GetSessionState()
+        private async Task StopSessionAsync(SessionStatus completionStatus)
         {
-            lock (_sessionLock)
-            {
-                var s = _session;
+            const int timeoutCtsSeconds = 10;
 
-                if (s is null)
-                {
-                    return new SessionStateSnapshot(
-                        Id: null,
-                        Status: SessionStatus.Created,
-                        IsActive: false,
-                        CanRequestStop: false);
-                }
-
-                return new SessionStateSnapshot(
-                    Id: s.Id,
-                    Status: s.Status,
-                    IsActive: s.IsActive,
-                    CanRequestStop: s.CanRequestStop);
-            }
-        }
-
-        private async Task StopSessionAsync()
-        {
             lock (_sessionLock)
             {
                 if (_session is null)
                 {
-                    // log here
-                    return;
-                }
-
-                if (!_session.CanRequestStop)
-                {
-                    // log here
+                    logger.TriedToStopNullSession();
                     return;
                 }
 
                 _session.Status = SessionStatus.Stopping;
             }
 
+            logger.AttemptingToCloseProcessWindows();
             await jobObjectManager.AttemptCloseWindowsInJobAsync(
                 _sessionSettings?.EndSessionGracePeriod ?? 0);
+
             try
             {
+                logger.TerminatingProcesses();
                 jobObjectManager.TerminateJobObject();
+
+                // Accept the job object as complete no matter what after x seconds to avoid hangs
+                using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutCtsSeconds));
+                await jobObjectManager.WaitForJobObjectCompletionAsync(timeoutCts.Token);
             }
             catch { /* Maybe do something here */ }
+            finally
+            {
+                var isCompletionStatus = completionStatus is (
+                      SessionStatus.Completed
+                   or SessionStatus.Failed
+                   or SessionStatus.Aborted);
+
+                lock (_sessionLock) _session.Status = isCompletionStatus
+                        ? completionStatus
+                        : SessionStatus.Completed;
+            }
         }
 
-        private void OnRunnerProcessExited(object? sender, RunnerProcessExitedEventArgs e)
+        private void OnRunnerProcessExited(object? _, RunnerProcessExitedEventArgs e)
         {
-            bool shouldEndSession;
+            var endSessionOnExit = e.EndSessionOnExit;
 
             lock (_sessionLock)
             {
                 // Don't do anything when not in a cancelable active session
-                if (_session?.CanRequestStop != true || _shutdownRequested) return;
+                if (_session?.CanRequestStop != true
+                    || _sessionCts?.Token.IsCancellationRequested == true) return;
 
-                shouldEndSession = e.EndSessionOnExit && _shutdownRequested == false;
-
-                if (shouldEndSession) _shutdownRequested = true;
+                if (endSessionOnExit)
+                {
+                    _sessionCts!.Cancel();
+                }
             }
 
-            if (shouldEndSession)
+            if (endSessionOnExit)
             {
-                RequestEndSession();
                 notifier.Notify(
                     "Ending Session",
                     $"Ending the current session because '{e.ProcessName}' has terminated.");
+
                 return;
             }
 
@@ -229,6 +247,23 @@ namespace FELauncher.Engine.Sessions
                     "Process Exited",
                     $"'{e.ProcessName}' has terminated.");
             }
+        }
+
+        private static string GetProcessRunBuildFailMessage(ProcessCreationFailure failure)
+        {
+            return failure.Reason switch
+            {
+                ProcessCreationFailureReason.EmptyPath
+                    => $"A provided executable path is empty.\nPlease verify settings.",
+
+                ProcessCreationFailureReason.InvalidFileExt
+                    => $"'{failure.FileName}' is not a valid executable file.\nPlease verify settings.",
+
+                ProcessCreationFailureReason.FileNotPresent
+                    => $"'{failure.FileName}' does not exist.\nPlease verify settings.",
+
+                _ => String.Empty,
+            };
         }
     }
 }
