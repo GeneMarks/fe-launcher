@@ -31,7 +31,7 @@ namespace FELauncher.Engine.Sessions
 
             return new SessionStateSnapshot(
                 Id: s?.Id,
-                Status: s?.Status ?? SessionStatus.Created,
+                Status: s?.Status ?? SessionStatus.Completed,
                 IsActive: s?.IsActive ?? false,
                 CanRequestStop: s?.CanRequestStop ?? false);
         }
