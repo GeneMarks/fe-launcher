@@ -174,7 +174,7 @@ namespace FELauncher.Engine.Sessions
             cts?.Cancel();
         }
 
-        private async Task StopSessionAsync(SessionStatus completionStatus)
+        private async Task StopSessionAsync(SessionStatus intendedCompletionStatus)
         {
             const int timeoutCtsSeconds = 10;
 
@@ -193,6 +193,8 @@ namespace FELauncher.Engine.Sessions
             await jobObjectManager.AttemptCloseWindowsInJobAsync(
                 _sessionSettings?.EndSessionGracePeriod ?? 0);
 
+            var completionStatus = intendedCompletionStatus;
+
             try
             {
                 logger.TerminatingProcesses();
@@ -202,7 +204,11 @@ namespace FELauncher.Engine.Sessions
                 using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutCtsSeconds));
                 await jobObjectManager.WaitForJobObjectCompletionAsync(timeoutCts.Token);
             }
-            catch { /* Maybe do something here */ }
+            catch (JobObjectException ex)
+            {
+                logger.AbandoningSessionDueToJobObjectError(ex);
+                completionStatus = SessionStatus.Failed;
+            }
             finally
             {
                 var isCompletionStatus = completionStatus is (

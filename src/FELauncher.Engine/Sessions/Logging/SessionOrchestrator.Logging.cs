@@ -16,6 +16,11 @@ namespace FELauncher.Engine.Sessions.Logging
         public static partial void UnknownFatalSessionError(this ILogger logger, Exception? ex = null);
 
         [LoggerMessage(
+            Level = LogLevel.Error,
+            Message = "Abandoning session due to an unexpected job object error that occurred during session shutdown.")]
+        public static partial void AbandoningSessionDueToJobObjectError(this ILogger logger, Exception? ex = null);
+
+        [LoggerMessage(
             Level = LogLevel.Warning,
             Message = "Tried to stop null session object. Returning.")]
         public static partial void TriedToStopNullSession(this ILogger logger);
