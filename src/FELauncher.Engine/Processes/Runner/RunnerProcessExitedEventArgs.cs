@@ -1,4 +1,4 @@
-﻿namespace FELauncher.Engine.Processes
+﻿namespace FELauncher.Engine.Processes.Runner
 {
     internal sealed class RunnerProcessExitedEventArgs : EventArgs
     {

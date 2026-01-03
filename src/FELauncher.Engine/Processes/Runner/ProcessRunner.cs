@@ -4,7 +4,7 @@ using FELauncher.Engine.Settings;
 using FELauncher.Shared.Contracts.Sessions;
 using Microsoft.Extensions.Logging;
 
-namespace FELauncher.Engine.Processes
+namespace FELauncher.Engine.Processes.Runner
 {
     internal sealed class ProcessRunner(
         ILogger<ProcessRunner> logger,
