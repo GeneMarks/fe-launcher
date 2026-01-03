@@ -219,6 +219,7 @@ namespace FELauncher.Engine.Sessions
         private void OnRunnerProcessExited(object? _, RunnerProcessExitedEventArgs e)
         {
             var endSessionOnExit = e.EndSessionOnExit;
+            var processName = e.ProcessName;
 
             lock (_sessionLock)
             {
@@ -236,7 +237,7 @@ namespace FELauncher.Engine.Sessions
             {
                 notifier.Notify(
                     "Ending Session",
-                    $"Ending the current session because '{e.ProcessName}' has terminated.");
+                    $"Ending the current session because '{processName}' has terminated.");
 
                 return;
             }
@@ -245,7 +246,7 @@ namespace FELauncher.Engine.Sessions
             {
                 notifier.Notify(
                     "Process Exited",
-                    $"'{e.ProcessName}' has terminated.");
+                    $"'{processName}' has terminated.");
             }
         }
 
