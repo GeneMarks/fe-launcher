@@ -131,10 +131,10 @@ class Program
         }
         catch (Exception ex)
         {
-            Log.Fatal(ex, "An unexpected fatal error occured.");
+            Log.Fatal(ex, "An unexpected fatal error occurred.");
             ErrorDialog.ShowFatal(
                 "An FE Launcher error occurred",
-                "An unexpected fatal error occured.\nCheck logs for more details.", ex);
+                "An unexpected fatal error occurred.\nCheck logs for more details.", ex);
             return 1;
         }
         finally

@@ -7,12 +7,12 @@ namespace FELauncher.Engine.Sessions.Logging
     {
         [LoggerMessage(
             Level = LogLevel.Error,
-            Message = "An unexpected ({ExceptionType}) error has occured. Ending the current session...")]
+            Message = "An unexpected ({ExceptionType}) error has occurred. Ending the current session...")]
         public static partial void FatalSessionError(this ILogger logger, string exceptionType);
 
         [LoggerMessage(
             Level = LogLevel.Error,
-            Message = "An unexpected error has occured. Ending the current session...")]
+            Message = "An unexpected error has occurred. Ending the current session...")]
         public static partial void UnknownFatalSessionError(this ILogger logger, Exception? ex = null);
 
         [LoggerMessage(
