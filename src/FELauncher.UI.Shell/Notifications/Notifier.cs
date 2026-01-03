@@ -7,6 +7,7 @@ namespace FELauncher.UI.Shell.Notifications
     internal sealed class Notifier(IPathResolver pathResolver) : INotifier
     {
         private readonly Uri defaultLogo = new(pathResolver.ResolvePath(AppPaths.NotificationImageFile));
+
         public void Notify(string title, string body)
         {
             new ToastContentBuilder()
