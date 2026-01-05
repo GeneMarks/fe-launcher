@@ -9,6 +9,7 @@ namespace FELauncher.UI.Shell.Tray
     {
         private TrayIcon? _notifyIcon;
         private HWND _windowHandle;
+        private WNDPROC? _wndProc;
         private const uint WM_TRAYICON = 0x800;
         private const string ClassName = "FELauncherTrayWnd";
         private IntPtr _classNamePtr;
@@ -41,10 +42,12 @@ namespace FELauncher.UI.Shell.Tray
 
         private unsafe void RegisterClass()
         {
+            _wndProc = WndProc;
+
             WNDCLASSEXW wc = new()
             {
                 cbSize        = (uint)sizeof(WNDCLASSEXW),
-                lpfnWndProc   = WndProc,
+                lpfnWndProc   = _wndProc,
                 lpszClassName = new PCWSTR((char*)_classNamePtr)
             };
 
