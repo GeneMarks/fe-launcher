@@ -17,9 +17,11 @@ namespace FELauncher.Engine.Processes
         private readonly ILogger<Process> _logger;
 
         private readonly string? _workingDir;
-        private SafeFileHandle? _safeProcHandle;
-        private SafeFileHandle? _safeWaitHandle;
         private uint _pid;
+        private SafeFileHandle? _safeProcHandle;
+        private WaitHandle? _waitHandle;
+        private RegisteredWaitHandle? _registeredWaitHandle;
+        private readonly WaitOrTimerCallback _waitCallback;
 
         public string PathWithArgs { get; }
         public string PrettyName { get; }
@@ -34,6 +36,8 @@ namespace FELauncher.Engine.Processes
             PathWithArgs = pathWithArgs;
             _workingDir = workingDir;
             PrettyName = prettyName;
+
+            _waitCallback = WaitCallback;
         }
 
         /// <summary>
@@ -41,7 +45,7 @@ namespace FELauncher.Engine.Processes
         /// </summary>
         /// <param name="safeJobHandle">Handle to a job object the process will be assigned to.</param>
         /// <exception cref="ProcessException">
-        /// Thrown when process creation or wait registration fails due to a Win32 error.
+        /// Thrown when process creation fails due to a Win32 error.
         /// </exception>
         public unsafe void StartInJob(SafeFileHandle safeJobHandle)
         {
@@ -100,17 +104,10 @@ namespace FELauncher.Engine.Processes
 
                 _safeProcHandle = new SafeFileHandle(pi.hProcess, true);
                 _pid = PInvoke.GetProcessId(_safeProcHandle);
+                
+                _ = PInvoke.CloseHandle(pi.hThread); // Not using this; Handle must be closed.
 
-                if (!PInvoke.RegisterWaitForSingleObject(
-                    out _safeWaitHandle, _safeProcHandle, new WAITORTIMERCALLBACK(WaitProc),
-                    null, PInvoke.INFINITE, WORKER_THREAD_FLAGS.WT_EXECUTEONLYONCE))
-                {
-                    var errorCode = Marshal.GetLastPInvokeError();
-                    var win32Ex = new Win32Exception(errorCode);
-
-                    _logger.FailedToRegisterWaitOperation(_pid, PathWithArgs, errorCode, win32Ex);
-                    throw new ProcessException($"Failed to register wait operation for pid {_pid} ({PathWithArgs}).", win32Ex);
-                }
+                RegisterWaitHandle();
             }
             finally
             {
@@ -119,7 +116,18 @@ namespace FELauncher.Engine.Processes
             }
         }
 
-        private unsafe void WaitProc(void* context, BOOLEAN timerOrWaitFired)
+        private void RegisterWaitHandle()
+        {
+            _waitHandle = new EventWaitHandle(false, EventResetMode.AutoReset)
+            {
+                SafeWaitHandle = new(_safeProcHandle!.DangerousGetHandle(), false)
+            };
+
+            _registeredWaitHandle = ThreadPool.RegisterWaitForSingleObject(
+                _waitHandle, _waitCallback, null, -1, true);
+        }
+
+        private void WaitCallback(object? state, bool timedOut)
         {
             uint exitCode;
             if (!PInvoke.GetExitCodeProcess(_safeProcHandle, out exitCode))
@@ -136,21 +144,15 @@ namespace FELauncher.Engine.Processes
             });
         }
 
-        private void CleanupWaitHandle()
-        {
-            if (_safeWaitHandle is not null)
-            {
-                _ = PInvoke.UnregisterWait(_safeWaitHandle);
-
-                _safeWaitHandle.Dispose();
-                _safeWaitHandle = null;
-            }
-        }
-
         public void Dispose()
         {
-            CleanupWaitHandle();
+            _registeredWaitHandle?.Unregister(null);
+            _registeredWaitHandle = null;
+
+            _waitHandle?.Dispose();
+            _waitHandle = null;
             _safeProcHandle?.Dispose();
+            _safeProcHandle = null;
         }
     }
 }

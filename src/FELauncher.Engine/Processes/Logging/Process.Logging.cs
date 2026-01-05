@@ -18,10 +18,5 @@ namespace FELauncher.Engine.Processes.Logging
             Level = LogLevel.Error,
             Message = "Failed to create process with path '{ProcessPath}'. Win32Error: {Win32ErrorCode}")]
         public static partial void FailedToCreateProcess(this ILogger logger, string processPath, int win32ErrorCode, Exception ex);
-
-        [LoggerMessage(
-            Level = LogLevel.Error,
-            Message = "Failed to register wait operation for PID {ProcessId} ({ProcessPath}). Win32Error: {Win32ErrorCode}")]
-        public static partial void FailedToRegisterWaitOperation(this ILogger logger, uint processId, string processPath, int win32ErrorCode, Exception ex);
     }
 }

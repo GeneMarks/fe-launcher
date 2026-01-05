@@ -157,6 +157,8 @@ namespace FELauncher.Engine.Processes.Runner
                 process.Exited -= OnProcessExited;
             }
 
+            process.Dispose();
+
             using var sessionScope = sessionLoggerScopeProvider.BeginSessionScope(logger);
             logger.ProcessExited(e.ProcessId, e.ProcessPathWithArgs, e.ExitCode);
 

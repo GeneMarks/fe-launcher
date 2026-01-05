@@ -1,4 +1,5 @@
 AssignProcessToJobObject
+CloseHandle
 CreateIoCompletionPort
 CreateJobObject
 CreateProcess
@@ -13,7 +14,6 @@ IsProcessInJob
 PostMessage
 PostQueuedCompletionStatus
 QueryInformationJobObject
-RegisterWaitForSingleObject
 SetInformationJobObject
 TerminateJobObject
 UnregisterWait
