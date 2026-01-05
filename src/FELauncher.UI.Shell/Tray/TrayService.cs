@@ -7,20 +7,20 @@ namespace FELauncher.UI.Shell.Tray
         private Thread? _thread;
         private TrayWindowHost? _tray;
 
-        protected override Task ExecuteAsync(CancellationToken ct)
+        protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
             _tray = new TrayWindowHost(handler);
 
             _thread = new Thread(_tray.Run)
             {
-                IsBackground = true,
-                Name = "TrayWindowHostThread"
+                Name = "TrayWindowHostThread",
+                IsBackground = true
             };
 
             _thread.SetApartmentState(ApartmentState.STA);
             _thread.Start();
 
-            ct.Register(() => _tray.Stop());
+            stoppingToken.Register(() => _tray.Stop());
 
             return Task.CompletedTask;
         }
