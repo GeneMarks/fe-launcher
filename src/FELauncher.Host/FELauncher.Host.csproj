@@ -7,7 +7,6 @@
         <TargetFramework>net9.0-windows10.0.17763.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <UseWPF>true</UseWPF>
         <OutputType>WinExe</OutputType>
         <PlatformTarget>x64</PlatformTarget>
         <RuntimeIdentifier>win-x64</RuntimeIdentifier>
@@ -27,6 +26,7 @@
         <ProjectReference Include="..\FELauncher.Shared\FELauncher.Shared.csproj" />
         <ProjectReference Include="..\FELauncher.Engine\FELauncher.Engine.csproj" />
         <ProjectReference Include="..\FELauncher.UI.Shell\FELauncher.UI.Shell.csproj" />
+        <ProjectReference Include="..\FELauncher.UI.Desktop\FELauncher.UI.Desktop.csproj" />
     </ItemGroup>
 
     <ItemGroup>
