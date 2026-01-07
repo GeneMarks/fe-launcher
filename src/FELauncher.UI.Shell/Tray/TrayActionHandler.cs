@@ -1,5 +1,6 @@
 ﻿using FELauncher.Shared;
 using FELauncher.Shared.Contracts.Engine.Sessions;
+using FELauncher.Shared.Contracts.UI.Desktop;
 using Microsoft.Extensions.Hosting;
 using System.Diagnostics;
 
@@ -7,7 +8,8 @@ namespace FELauncher.UI.Shell.Tray
 {
     internal sealed class TrayActionHandler(
         IHostApplicationLifetime lifetime,
-        ISessionOrchestrator sessionOrchestrator)
+        ISessionOrchestrator sessionOrchestrator,
+        ISettingsWindowService settingsWindowService)
     {
         public SessionStateSnapshot GetSessionState()
             => sessionOrchestrator.GetSessionState();
@@ -19,10 +21,7 @@ namespace FELauncher.UI.Shell.Tray
             => sessionOrchestrator.RequestCancelSession();
 
         public void OpenSettings()
-        {
-            // todo
-            return;
-        }
+            => _ = settingsWindowService.ShowWindowAsync();
 
         public void Exit()
             => lifetime.StopApplication();

@@ -90,6 +90,7 @@ namespace FELauncher.UI.Shell.Tray
                     break;
 
                 case Items.Options:
+                    handler.OpenSettings();
                     break;
 
                 case Items.CheckUpdates:
