@@ -225,7 +225,7 @@ namespace FELauncher.Engine.JobObjects
             }
 
             // Don't listen for completion status if there are
-            // no processes in the job object.
+            // no processes in the job object. Otherwise it will hang.
             if (info.ActiveProcesses == 0)
             {
                 logger.NoActiveProcsInJobInWait();
