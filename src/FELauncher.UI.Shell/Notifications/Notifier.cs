@@ -1,5 +1,5 @@
 ﻿using FELauncher.Shared;
-using FELauncher.Shared.Contracts;
+using FELauncher.Shared.Contracts.Engine;
 using Microsoft.Toolkit.Uwp.Notifications;
 
 namespace FELauncher.UI.Shell.Notifications

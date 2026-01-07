@@ -1,5 +1,5 @@
 ﻿using FELauncher.Engine.Processes.Logging;
-using FELauncher.Shared.Contracts;
+using FELauncher.Shared.Contracts.Engine;
 using Microsoft.Extensions.Logging;
 
 namespace FELauncher.Engine.Processes

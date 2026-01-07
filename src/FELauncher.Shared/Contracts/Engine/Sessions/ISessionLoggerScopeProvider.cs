@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 
-namespace FELauncher.Shared.Contracts.Sessions
+namespace FELauncher.Shared.Contracts.Engine.Sessions
 {
     public interface ISessionLoggerScopeProvider
     {
@@ -11,7 +11,7 @@ namespace FELauncher.Shared.Contracts.Sessions
         void SetCurrentSessionId(string? sessionId);
 
         /// <summary>
-        /// Begins a logging scope that includes the current session id (if set).
+        /// Starts a logging scope that includes the current session id (if set).
         /// Returns <c>null</c> when no session is active.
         /// </summary>
         IDisposable? BeginSessionScope(ILogger logger);

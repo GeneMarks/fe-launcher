@@ -1,4 +1,4 @@
-﻿namespace FELauncher.Shared.Contracts.Sessions
+﻿namespace FELauncher.Shared.Contracts.Engine.Sessions
 {
     public enum SessionStatus
     {
