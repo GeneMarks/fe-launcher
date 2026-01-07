@@ -20,8 +20,6 @@ namespace FELauncher.UI.Shell.Tray
             _thread.SetApartmentState(ApartmentState.STA);
             _thread.Start();
 
-            stoppingToken.Register(() => _tray.Stop());
-
             return Task.CompletedTask;
         }
 
