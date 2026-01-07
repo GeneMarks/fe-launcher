@@ -12,8 +12,8 @@ namespace FELauncher.UI.Shell.Tray
         public SessionStateSnapshot GetSessionState()
             => sessionOrchestrator.GetSessionState();
 
-        public async void LaunchFrontend()
-            => await sessionOrchestrator.StartNewSessionAsync();
+        public void LaunchFrontend()
+            => _ = sessionOrchestrator.StartNewSessionAsync();
 
         public void EndSession()
             => sessionOrchestrator.RequestCancelSession();
