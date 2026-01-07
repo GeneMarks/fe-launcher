@@ -240,20 +240,13 @@ namespace FELauncher.Engine.Sessions
                 }
             }
 
-            if (endSessionOnExit)
-            {
-                notifier.Notify(
-                    "Ending Session",
-                    $"Ending the current session because '{processName}' has terminated.");
-
-                return;
-            }
+            var toastMessage = endSessionOnExit
+                ? $"'{processName}' has terminated.\nEnding the current session."
+                : $"'{processName}' has terminated.";
 
             if (e.NotifyOnExit)
             {
-                notifier.Notify(
-                    "Process Exited",
-                    $"'{processName}' has terminated.");
+                notifier.Notify("Process Exited", toastMessage);
             }
         }
 
