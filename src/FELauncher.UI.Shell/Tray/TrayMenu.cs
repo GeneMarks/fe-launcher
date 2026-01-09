@@ -12,7 +12,7 @@ namespace FELauncher.UI.Shell.Tray
             public const nuint Launch              = 1000;
             public const nuint EndSession          = 1010;
             public const nuint InstallDependencies = 1020;
-            public const nuint Options             = 1030;
+            public const nuint Settings             = 1030;
             public const nuint CheckUpdates        = 1040;
             public const nuint Exit                = 1050;
         }
@@ -55,7 +55,7 @@ namespace FELauncher.UI.Shell.Tray
                 disabled: isSessionActive && !canEndSession);
             AppendMenuItem(menu);
             AppendMenuItem(menu, Items.InstallDependencies, "Install dependencies", isSessionActive);
-            AppendMenuItem(menu, Items.Options, "Options", isSessionActive);
+            AppendMenuItem(menu, Items.Settings, "Open settings", isSessionActive);
             AppendMenuItem(menu);
             AppendMenuItem(menu, Items.CheckUpdates, "Check updates", false);
             AppendMenuItem(menu);
@@ -89,7 +89,7 @@ namespace FELauncher.UI.Shell.Tray
                 case Items.InstallDependencies:
                     break;
 
-                case Items.Options:
+                case Items.Settings:
                     handler.OpenSettings();
                     break;
 
