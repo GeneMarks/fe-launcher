@@ -2,13 +2,15 @@
 using System.Windows;
 using System.Windows.Threading;
 
-namespace FELauncher.UI.Desktop.Services
+namespace FELauncher.UI.Desktop.Services.Infrastructure
 {
     internal sealed class WpfService : BackgroundService
     {
         private Thread? _thread;
-        private Dispatcher? _dispatcher;
-        private readonly TaskCompletionSource _ready = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public readonly TaskCompletionSource _ready = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public Dispatcher? ThreadDispatcher { get; private set; }
+        public Task Ready => _ready.Task;
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -24,17 +26,11 @@ namespace FELauncher.UI.Desktop.Services
             return Task.CompletedTask;
         }
 
-        public async Task InvokeAsync(Action action)
-        {
-            await _ready.Task.ConfigureAwait(false);
-            await _dispatcher!.InvokeAsync(action).Task.ConfigureAwait(false);
-        }
-
         public override async Task StopAsync(CancellationToken ct)
         {
-            if (_dispatcher is null) return;
+            if (ThreadDispatcher is null) return;
 
-            await _dispatcher.InvokeAsync(() => _dispatcher.InvokeShutdown())
+            await ThreadDispatcher.InvokeAsync(() => ThreadDispatcher.InvokeShutdown())
                 .Task.ConfigureAwait(false);
 
             await base.StopAsync(ct);
@@ -42,7 +38,7 @@ namespace FELauncher.UI.Desktop.Services
 
         private void StartWpfMessageLoop()
         {
-            _dispatcher = Dispatcher.CurrentDispatcher;
+            ThreadDispatcher = Dispatcher.CurrentDispatcher;
 
             _ = new Application()
             {
