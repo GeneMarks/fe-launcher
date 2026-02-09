@@ -8,6 +8,5 @@
         public const string CheckUpdatesUrl = "https://github.com/GeneMarks/fe-launcher/releases";
 
         public const string TrayIconResource          = "FELauncher.Shared.Assets.win_ico_16.ico";
-        public const string NotificationImageResource = "FELauncher.Shared.Assets.cade_notify.png";
     }
 }
