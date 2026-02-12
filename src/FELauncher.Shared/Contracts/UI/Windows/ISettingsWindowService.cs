@@ -1,4 +1,4 @@
-﻿namespace FELauncher.Shared.Contracts.UI.Desktop.Windows
+﻿namespace FELauncher.Shared.Contracts.UI.Windows
 {
     public interface ISettingsWindowService
     {
