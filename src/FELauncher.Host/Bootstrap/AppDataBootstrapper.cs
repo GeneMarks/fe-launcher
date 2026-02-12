@@ -1,20 +1,12 @@
-using FELauncher.Engine.Settings;
+using FELauncher.Engine.IO;
 using FELauncher.Host.Exceptions;
 using FELauncher.Shared;
-using System.IO;
-using System.Text.Json;
-using System.Text.Json.Serialization;
+using FELauncher.Shared.Contracts.Settings;
 
 namespace FELauncher.Host.Bootstrap
 {
     public static class AppDataBootstrapper
     {
-        private static readonly JsonSerializerOptions jsonOptions = new()
-        {
-            WriteIndented = true,
-            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
-        };
-
         public static void EnsureAppDataInitialized()
         {
             EnsurePathExists(AppPaths.AppDataDirectory);
@@ -46,19 +38,7 @@ namespace FELauncher.Host.Bootstrap
 
             try
             {
-                var feLauncherSettings = new FELauncherSettings();
-
-                var settings = new
-                {
-                    FELauncher = feLauncherSettings
-                };
-
-                var serializedSettings = JsonSerializer.Serialize(settings, jsonOptions);
-
-                // Use temporary file in case writing fails
-                var tmp = Path.GetTempFileName();
-                File.WriteAllText(tmp, serializedSettings);
-                File.Move(tmp, settingsFile, overwrite: true);
+                JsonSettingsStore.SaveSettings(new FELauncherSettings(), settingsFile);
             }
             catch (Exception ex)
             {
