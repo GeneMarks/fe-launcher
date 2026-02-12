@@ -1,4 +1,4 @@
-﻿using FELauncher.Shared.Contracts.UI.Desktop;
+﻿using FELauncher.Shared.Contracts.UI;
 
 namespace FELauncher.UI.Desktop.Services.Infrastructure
 {
