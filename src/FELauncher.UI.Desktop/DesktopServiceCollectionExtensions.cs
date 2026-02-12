@@ -1,5 +1,5 @@
-﻿using FELauncher.Shared.Contracts.UI.Desktop;
-using FELauncher.Shared.Contracts.UI.Desktop.Windows;
+﻿using FELauncher.Shared.Contracts.UI;
+using FELauncher.Shared.Contracts.UI.Windows;
 using FELauncher.UI.Desktop.Services.Infrastructure;
 using FELauncher.UI.Desktop.Services.Windows;
 using Microsoft.Extensions.DependencyInjection;
