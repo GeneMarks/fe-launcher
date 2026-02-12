@@ -12,7 +12,6 @@
 
     <ItemGroup>
         <EmbeddedResource Include="..\..\assets\win_ico_16.ico" LogicalName="FELauncher.Shared.Assets.win_ico_16.ico" />
-        <EmbeddedResource Include="..\..\assets\cade_notify.png" LogicalName="FELauncher.Shared.Assets.cade_notify.png" />
     </ItemGroup>
 
 </Project>
