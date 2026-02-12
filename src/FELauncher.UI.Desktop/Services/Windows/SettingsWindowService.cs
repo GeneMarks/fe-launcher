@@ -1,20 +1,42 @@
-﻿using FELauncher.Shared.Contracts.UI.Desktop;
-using FELauncher.Shared.Contracts.UI.Desktop.Windows;
+﻿using FELauncher.Shared.Contracts.IO;
+using FELauncher.Shared.Contracts.UI;
+using FELauncher.Shared.Contracts.UI.Windows;
+using FELauncher.UI.Desktop.ViewModels;
+using FELauncher.UI.Desktop.Views;
 
 namespace FELauncher.UI.Desktop.Services.Windows
 {
-    internal sealed class SettingsWindowService(IUiDispatcher ui) : ISettingsWindowService
+    internal sealed class SettingsWindowService(
+        IUiDispatcher ui,
+        ISettingsStore settingsStore) : ISettingsWindowService
     {
         private SettingsWindow? _window;
+        private SettingsWindowViewModel? _vm;
 
         public async Task ShowWindowAsync()
         {
+            if (_vm is null)
+            {
+                _vm = new SettingsWindowViewModel(settingsStore);
+                await _vm.LoadSettingsAsync().ConfigureAwait(false);
+            }
+
             await ui.InvokeAsync(() =>
             {
                 if (_window is null)
                 {
-                    _window = new SettingsWindow();
-                    _window.Closed += (_, _) => _window = null;
+                    _window = new SettingsWindow()
+                    {
+                        DataContext = _vm
+                    };
+
+                    _vm.OnRequestClose += (_, _) => _window.Close();
+
+                    _window.Closed += (_, _) =>
+                    {
+                        _window = null;
+                        _vm = null;
+                    };
                 }
 
                 if (_window.WindowState == System.Windows.WindowState.Minimized)
