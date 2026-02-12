@@ -1,4 +1,4 @@
-﻿namespace FELauncher.Shared.Contracts.Engine
+﻿namespace FELauncher.Shared.Contracts.IO
 {
 	public interface IPathResolver
 	{

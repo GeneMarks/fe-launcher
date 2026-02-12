@@ -1,4 +1,4 @@
-﻿namespace FELauncher.Shared.Contracts.Engine.Sessions
+﻿namespace FELauncher.Shared.Contracts.Sessions
 {
     public interface ISessionOrchestrator
     {

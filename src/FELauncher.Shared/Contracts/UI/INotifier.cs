@@ -1,4 +1,4 @@
-﻿namespace FELauncher.Shared.Contracts.Engine
+﻿namespace FELauncher.Shared.Contracts.UI
 {
     public interface INotifier
     {

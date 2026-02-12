@@ -1,5 +1,5 @@
 ﻿using FELauncher.Shared;
-using FELauncher.Shared.Contracts.Engine.Sessions;
+using FELauncher.Shared.Contracts.Sessions;
 using FELauncher.Shared.Contracts.UI.Desktop.Windows;
 using Microsoft.Extensions.Hosting;
 using System.Diagnostics;

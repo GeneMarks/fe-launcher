@@ -1,5 +1,5 @@
 using FELauncher.Engine.IO.Logging;
-using FELauncher.Shared.Contracts.Engine;
+using FELauncher.Shared.Contracts.IO;
 using Microsoft.Extensions.Logging;
 
 namespace FELauncher.Engine.IO

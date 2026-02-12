@@ -3,9 +3,9 @@ using FELauncher.Engine.JobObjects;
 using FELauncher.Engine.Processes;
 using FELauncher.Engine.Processes.Runner;
 using FELauncher.Engine.Sessions;
-using FELauncher.Engine.Settings;
-using FELauncher.Shared.Contracts.Engine;
-using FELauncher.Shared.Contracts.Engine.Sessions;
+using FELauncher.Shared.Contracts.IO;
+using FELauncher.Shared.Contracts.Sessions;
+using FELauncher.Shared.Contracts.Settings;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 

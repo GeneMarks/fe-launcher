@@ -1,4 +1,4 @@
-﻿using FELauncher.Shared.Contracts.Engine.Sessions;
+﻿using FELauncher.Shared.Contracts.Sessions;
 using NanoidDotNet;
 using System.Diagnostics;
 
