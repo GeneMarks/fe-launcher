@@ -19,6 +19,7 @@ namespace FELauncher.Engine
             services.AddSingleton<IPathResolver, PathResolver>();
             services.AddSingleton<ISessionOrchestrator, SessionOrchestrator>();
             services.AddSingleton<ISessionLoggerScopeProvider, SessionLoggerScopeProvider>();
+            services.AddSingleton<ISettingsStore, JsonSettingsStore>();
 
             // Internal services
             services.AddSingleton<ProcessFactory>();
@@ -32,7 +33,7 @@ namespace FELauncher.Engine
             this IServiceCollection services,
             IConfiguration config)
         {
-            services.Configure<FELauncherSettings>(config.GetSection("FELauncher"));
+            services.Configure<FELauncherSettings>(config);
 
             return services;
         }
