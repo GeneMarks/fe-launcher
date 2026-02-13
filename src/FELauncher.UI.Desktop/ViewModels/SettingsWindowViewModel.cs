@@ -1,108 +1,88 @@
-﻿using FELauncher.Shared;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using FELauncher.Shared;
 using FELauncher.Shared.Contracts.IO;
 using FELauncher.Shared.Contracts.Settings;
-using FELauncher.UI.Desktop.MVVM;
-using System.Windows.Input;
 
 namespace FELauncher.UI.Desktop.ViewModels
 {
-    internal sealed class SettingsWindowViewModel(ISettingsStore settingsStore) : ViewModel
+    internal sealed partial class SettingsWindowViewModel(ISettingsStore settingsStore) : ObservableObject
     {
-        public event EventHandler? OnRequestClose;
+        public event Action? RequestClose;
 
         private FELauncherSettings? _settings = new();
 
+        public string AppVersion { get; } = AppConstants.AppVersion;
+
+        [ObservableProperty] private bool _startWithWindows;
+        [ObservableProperty] private bool _autoLaunchSession;
+        [ObservableProperty] private bool _disableNotifications;
+        [ObservableProperty] private int _endSessionGracePeriod;
+
+        [ObservableProperty] private string? _frontendPath;
+        [ObservableProperty] private string? _frontendArgs;
+        [ObservableProperty] private int _frontendDelaySeconds;
+        [ObservableProperty] private bool _frontendNotifyOnExit;
+        [ObservableProperty] private bool _frontendEndSessionOnExit;
+
+        [ObservableProperty]
+        [NotifyCanExecuteChangedFor(nameof(OkCommand))]
+        [NotifyCanExecuteChangedFor(nameof(CancelCommand))]
         private bool _isSaving;
-        public bool IsSaving
+
+        private bool CanOk => !IsSaving;
+        [RelayCommand(CanExecute = nameof(CanOk))]
+        private async Task OkAsync()
         {
-            get => _isSaving;
-            private set
+            if (IsSaving) return;
+
+            IsSaving = true;
+            try
             {
-                if (SetProperty(ref _isSaving, value))
-                {
-                    CommandManager.InvalidateRequerySuggested();
-                }
+                ApplyToSettings();
+                await settingsStore.SaveSettingsAsync(_settings!);
+            }
+            finally
+            {
+                IsSaving = false;
+                RequestClose?.Invoke();
             }
         }
 
-        public string AppVersion { get; } = AppConstants.AppVersion;
+        private bool CanCancel => !IsSaving;
+        [RelayCommand(CanExecute = nameof(CanCancel))]
+        private void Cancel() => RequestClose?.Invoke();
 
-        private bool _startWithWindows;
-        public bool StartWithWindows { get => _startWithWindows; set => SetProperty(ref _startWithWindows, value); }
-
-        private bool _autoLaunchSession;
-        public bool AutoLaunchSession { get => _autoLaunchSession; set => SetProperty(ref _autoLaunchSession, value); }
-
-        private bool _disableNotifications;
-        public bool DisableNotifications { get => _disableNotifications; set => SetProperty(ref _disableNotifications, value); }
-
-        private int _endSessionGracePeriod;
-        public int EndSessionGracePeriod { get => _endSessionGracePeriod; set => SetProperty(ref _endSessionGracePeriod, value); }
-
-        private string? _frontendPath;
-        public string? FrontendPath { get => _frontendPath; set => SetProperty(ref _frontendPath, value); }
-
-        private string? _frontendArgs;
-        public string? FrontendArgs { get => _frontendArgs; set => SetProperty(ref _frontendArgs, value); }
-
-        private int _frontendDelaySeconds;
-        public int FrontendDelaySeconds { get => _frontendDelaySeconds; set => SetProperty(ref _frontendDelaySeconds, value); }
-
-        private bool _frontendNotifyOnExit;
-        public bool FrontendNotifyOnExit { get => _frontendNotifyOnExit; set => SetProperty(ref _frontendNotifyOnExit, value); }
-
-        private bool _frontendEndSessionOnExit;
-        public bool FrontendEndSessionOnExit { get => _frontendEndSessionOnExit; set => SetProperty(ref _frontendEndSessionOnExit, value); }
-
-        public async Task LoadSettingsAsync()
+        public async Task InitializeAsync()
         {
             _settings = await settingsStore.GetSettingsAsync();
 
-            StartWithWindows = _settings?.StartWithWindows ?? false;
-            AutoLaunchSession = _settings?.AutoLaunchSession ?? false;
-            DisableNotifications = _settings?.DisableNotifications ?? false;
-            EndSessionGracePeriod = _settings?.EndSessionGracePeriod ?? 0;
-            FrontendPath = _settings?.Frontend.Path ?? "";
-            FrontendArgs = _settings?.Frontend.Arguments ?? "";
-            FrontendDelaySeconds = _settings?.Frontend.DelaySeconds ?? 0;
-            FrontendNotifyOnExit = _settings?.Frontend.NotifyOnExit ?? false;
+            StartWithWindows         = _settings?.StartWithWindows ?? false;
+            AutoLaunchSession        = _settings?.AutoLaunchSession ?? false;
+            DisableNotifications     = _settings?.DisableNotifications ?? false;
+            EndSessionGracePeriod    = _settings?.EndSessionGracePeriod ?? 0;
+
+            FrontendPath             = _settings?.Frontend.Path ?? "";
+            FrontendArgs             = _settings?.Frontend.Arguments ?? "";
+            FrontendDelaySeconds     = _settings?.Frontend.DelaySeconds ?? 0;
+            FrontendNotifyOnExit     = _settings?.Frontend.NotifyOnExit ?? false;
             FrontendEndSessionOnExit = _settings?.Frontend.EndSessionOnExit ?? false;
         }
 
-        public void ApplySettings()
+        private void ApplyToSettings()
         {
             _settings ??= new FELauncherSettings();
-
-            _settings.StartWithWindows = StartWithWindows;
-            _settings.AutoLaunchSession = AutoLaunchSession;
-            _settings.DisableNotifications = DisableNotifications;
+            _settings.StartWithWindows      = StartWithWindows;
+            _settings.AutoLaunchSession     = AutoLaunchSession;
+            _settings.DisableNotifications  = DisableNotifications;
             _settings.EndSessionGracePeriod = EndSessionGracePeriod;
-            _settings.Frontend.Path = FrontendPath ?? "";
-            _settings.Frontend.Arguments = FrontendArgs;
-            _settings.Frontend.DelaySeconds = FrontendDelaySeconds;
-            _settings.Frontend.NotifyOnExit = FrontendNotifyOnExit;
+
+            _settings.Frontend ??= new ProcessSettings();
+            _settings.Frontend.Path             = FrontendPath ?? "";
+            _settings.Frontend.Arguments        = FrontendArgs;
+            _settings.Frontend.DelaySeconds     = FrontendDelaySeconds;
+            _settings.Frontend.NotifyOnExit     = FrontendNotifyOnExit;
             _settings.Frontend.EndSessionOnExit = FrontendEndSessionOnExit;
         }
-
-        private ICommand? _okCommand;
-        public ICommand OkCommand
-            => _okCommand ??= new AsyncRelayCommand(OkAsync);
-
-        private async Task OkAsync()
-        {
-            IsSaving = true;
-            ApplySettings();
-            await settingsStore.SaveSettingsAsync(_settings!);
-            IsSaving = false;
-            RequestClose();
-        }
-
-        private ICommand? _cancelCommand;
-        public ICommand CancelCommand
-            => _cancelCommand ??= new RelayCommand(
-                (_) => !IsSaving,
-                (_) => RequestClose());
-
-        private void RequestClose() => OnRequestClose?.Invoke(this, EventArgs.Empty);
     }
 }

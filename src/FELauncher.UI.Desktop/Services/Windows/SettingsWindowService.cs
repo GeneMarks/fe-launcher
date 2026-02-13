@@ -18,7 +18,7 @@ namespace FELauncher.UI.Desktop.Services.Windows
             if (_vm is null)
             {
                 _vm = new SettingsWindowViewModel(settingsStore);
-                await _vm.LoadSettingsAsync().ConfigureAwait(false);
+                await _vm.InitializeAsync().ConfigureAwait(false);
             }
 
             await ui.InvokeAsync(() =>
@@ -30,7 +30,7 @@ namespace FELauncher.UI.Desktop.Services.Windows
                         DataContext = _vm
                     };
 
-                    _vm.OnRequestClose += (_, _) => _window.Close();
+                    _vm.RequestClose += () => _window.Close();
 
                     _window.Closed += (_, _) =>
                     {
