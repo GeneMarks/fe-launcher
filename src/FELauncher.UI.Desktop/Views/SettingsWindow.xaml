@@ -49,16 +49,16 @@
             <Border Grid.Row="1" Padding="15">
                 <StackPanel>
                     <CheckBox IsChecked="{Binding StartWithWindows}"
-                              Height="20" VerticalContentAlignment="Center">
+                              Height="22" VerticalContentAlignment="Center">
                         Start with Windows
                     </CheckBox>
                     <CheckBox IsChecked="{Binding AutoLaunchSession}"
-                              Height="20" VerticalContentAlignment="Center">
+                              Height="22" VerticalContentAlignment="Center">
                         Automatically launch session on app startup
                     </CheckBox>
                     <StackPanel Orientation="Horizontal">
                         <CheckBox IsChecked="{Binding DisableNotifications}"
-                                  Height="20" VerticalContentAlignment="Center">
+                                  Height="22" VerticalContentAlignment="Center">
                             Disable notifications
                         </CheckBox>
                         <Image Source="/FELauncher.UI.Desktop;component/information_tip.png"
