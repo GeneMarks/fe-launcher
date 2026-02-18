@@ -8,7 +8,7 @@
         d:DataContext="{d:DesignInstance Type=viewmodels:SettingsWindowViewModel}"
         mc:Ignorable="d"
         Title="FE Launcher Settings"
-        Width="420" SizeToContent="Height"
+        Width="650" SizeToContent="Height"
         Closing="SettingsWindow_Closing"
         MouseDown="SettingsWindow_MouseDown"
         ResizeMode="CanMinimize"
