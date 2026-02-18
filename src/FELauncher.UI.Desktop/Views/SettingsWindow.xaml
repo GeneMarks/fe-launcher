@@ -7,7 +7,7 @@
         xmlns:viewmodels="clr-namespace:FELauncher.UI.Desktop.ViewModels"
         d:DataContext="{d:DesignInstance Type=viewmodels:SettingsWindowViewModel}"
         mc:Ignorable="d"
-        Title="Settings"
+        Title="FE Launcher Settings"
         Width="420" SizeToContent="Height"
         Closing="SettingsWindow_Closing"
         MouseDown="SettingsWindow_MouseDown"
