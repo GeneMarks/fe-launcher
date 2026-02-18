@@ -33,6 +33,8 @@ namespace FELauncher.UI.Desktop.Services.Infrastructure
             await ThreadDispatcher.InvokeAsync(() => ThreadDispatcher.InvokeShutdown())
                 .Task.ConfigureAwait(false);
 
+            _thread?.Join();
+
             await base.StopAsync(ct);
         }
 
