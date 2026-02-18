@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:FELauncher.UI.Desktop.Views"
         xmlns:viewmodels="clr-namespace:FELauncher.UI.Desktop.ViewModels"
+        xmlns:sections="clr-namespace:FELauncher.UI.Desktop.Views.Sections"
         d:DataContext="{d:DesignInstance Type=viewmodels:SettingsWindowViewModel}"
         mc:Ignorable="d"
         Title="FE Launcher Settings"
@@ -15,172 +16,46 @@
         WindowStartupLocation="CenterScreen"
         SnapsToDevicePixels="True"
         UseLayoutRounding="True"
-        Background="#f0f0f0">
+        ThemeMode="Light">
+
+    <Window.Resources>
+        <DataTemplate DataType="{x:Type viewmodels:GeneralSectionViewModel}"><sections:GeneralSection /></DataTemplate>
+        <DataTemplate DataType="{x:Type viewmodels:FrontendSectionViewModel}"><sections:FrontendSection /></DataTemplate>
+        <DataTemplate DataType="{x:Type viewmodels:PreProcessesSectionViewModel}"><sections:PreProcessesSection /></DataTemplate>
+    </Window.Resources>
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="72" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <Image Grid.Row="0"
-               Source="/FELauncher.UI.Desktop;component/logo.png"
-               Width="230" Height="60"
-               Stretch="None"
-               HorizontalAlignment="Center" VerticalAlignment="Center" 
-               RenderOptions.BitmapScalingMode="NearestNeighbor"
-               SnapsToDevicePixels="True" UseLayoutRounding="True" />
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="180" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
 
-        <TabControl Grid.Row="1" Margin="10,0,10,0">
-            <TabItem Header="General">
-                <Border Padding="15">
-                    <StackPanel>
-                        <CheckBox IsChecked="{Binding StartWithWindows}"
-                                  Height="22" VerticalContentAlignment="Center">
-                            Start with Windows
-                        </CheckBox>
-                        <CheckBox IsChecked="{Binding AutoLaunchSession}"
-                                  Height="22" VerticalContentAlignment="Center">
-                            Automatically launch session on app startup
-                        </CheckBox>
-                        <StackPanel Orientation="Horizontal">
-                            <CheckBox IsChecked="{Binding DisableNotifications}"
-                                      Height="22" VerticalContentAlignment="Center">
-                                Disable notifications
-                            </CheckBox>
-                            <Image Source="/FELauncher.UI.Desktop;component/information_tip.png"
-                                   Width="32" Height="Auto"
-                                   Stretch="None"
+            <ListView Grid.Column="0"
+                      Margin="10,10,10,0"
+                      ItemsSource="{Binding NavItems}"
+                      SelectedItem="{Binding SelectedNavItem}"
+                      SelectionMode="Single">
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding Title}"
                                    VerticalAlignment="Center"
-                                   RenderOptions.BitmapScalingMode="NearestNeighbor"
-                                   SnapsToDevicePixels="True" UseLayoutRounding="True"
-                                   ToolTip="Supress all system notifications. Overrides other notification options."
-                                   ToolTipService.InitialShowDelay="400" />
-                        </StackPanel>
+                                   Margin="8,6" />
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
 
-                        <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
-                            <Label Padding="0,0,5,0"
-                                   VerticalAlignment="Center">
-                                End session grace period:
-                            </Label>
-                            <TextBox Text="{Binding EndSessionGracePeriod}"
-                                     Width="25" Height="20"
-                                     VerticalAlignment="Center" VerticalContentAlignment="Center" />
-                            <Image Source="/FELauncher.UI.Desktop;component/information_tip.png"
-                                   Width="32" Height="Auto"
-                                   Stretch="None"
-                                   VerticalAlignment="Center"
-                                   RenderOptions.BitmapScalingMode="NearestNeighbor"
-                                   SnapsToDevicePixels="True" UseLayoutRounding="True"
-                                   ToolTip="Time, in seconds, to wait after sending a close signal to session windows."
-                                   ToolTipService.InitialShowDelay="400" />
-                        </StackPanel>
-                    </StackPanel>
-                </Border>
-            </TabItem>
+            <ContentControl Grid.Column="1" Content="{Binding SelectedNavItem.Content}" />
+        </Grid>
 
-            <TabItem Header="Frontend">
-                <Border Padding="15">
-                    <StackPanel>
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-
-                            <Label Grid.Column="0"
-                                   Padding="0,0,5,0"
-                                   VerticalAlignment="Center">
-                                Path:
-                            </Label>
-                            <TextBox Text="{Binding FrontendPath}"
-                                     Grid.Column="1"
-                                     Height="20" VerticalContentAlignment="Center" />
-                            <Image Grid.Column="2"
-                                   Source="/FELauncher.UI.Desktop;component/file_selector.png"
-                                   Width="32" Height="20"
-                                   Stretch="None"
-                                   VerticalAlignment="Center"
-                                   RenderOptions.BitmapScalingMode="NearestNeighbor"
-                                   SnapsToDevicePixels="True" UseLayoutRounding="True"
-                                   ToolTip="Open file selector"
-                                   ToolTipService.InitialShowDelay="400" />
-                        </Grid>
-
-                        <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
-                            <StackPanel Orientation="Horizontal">
-                                <Label Padding="0,0,5,0"
-                                       VerticalAlignment="Center">
-                                    Delay:
-                                </Label>
-                                <TextBox Text="{Binding FrontendDelaySeconds}"
-                                         Width="25" Height="20"
-                                         VerticalAlignment="Center" VerticalContentAlignment="Center" />
-                                <Image Source="/FELauncher.UI.Desktop;component/information_tip.png"
-                                       Width="32" Height="Auto"
-                                       Stretch="None"
-                                       VerticalAlignment="Center"
-                                       RenderOptions.BitmapScalingMode="NearestNeighbor"
-                                       SnapsToDevicePixels="True" UseLayoutRounding="True"
-                                       ToolTip="Time, in seconds, to wait before launching the frontend."
-                                       ToolTipService.InitialShowDelay="400" />
-                            </StackPanel>
-
-                            <CheckBox IsChecked="{Binding FrontendNotifyOnExit}"
-                                      Height="20" Margin="20,0,0,0"
-                                      VerticalContentAlignment="Top">
-                                Notify on exit
-                            </CheckBox>
-
-                            <CheckBox IsChecked="{Binding FrontendEndSessionOnExit}"
-                                      Height="20" Margin="10,0,0,0"
-                                      VerticalContentAlignment="Top">
-                                End session on exit
-                            </CheckBox>
-                        </StackPanel>
-
-                        <Grid Margin="0,15,0,0">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-
-                            <Label Grid.Column="0"
-                                   Padding="0,0,5,0"
-                                   VerticalAlignment="Center">
-                                Args:
-                            </Label>
-                            <TextBox Text="{Binding FrontendArgs}"
-                                     Grid.Column="1"
-                                     Height="20" VerticalContentAlignment="Center" />
-                            <Image Grid.Column="2"
-                                   Source="/FELauncher.UI.Desktop;component/clear_text.png"
-                                   Width="20" Height="14"
-                                   Stretch="None"
-                                   VerticalAlignment="Center"
-                                   RenderOptions.BitmapScalingMode="NearestNeighbor"
-                                   SnapsToDevicePixels="True" UseLayoutRounding="True"
-                                   ToolTip="Clear args"
-                                   ToolTipService.InitialShowDelay="400" />
-                        </Grid>
-                    </StackPanel>
-                </Border>
-            </TabItem>
-
-            <TabItem Header="Pre-processes">
-            </TabItem>
-
-            <TabItem Header="Shortcuts">
-            </TabItem>
-
-            <TabItem Header="Advanced">
-            </TabItem>
-        </TabControl>
-
-        <Grid Grid.Row="2" Margin="10">
+        <Grid Grid.Row="1"
+              Margin="0,10,0,0"
+              Background="{DynamicResource ControlAltFillColorSecondaryBrush}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
@@ -189,19 +64,20 @@
             <TextBlock Grid.Column="0"
                        Text="{Binding AppVersion}"
                        VerticalAlignment="Bottom"
+                       Margin="10"
                        Opacity=".40" />
 
             <StackPanel Grid.Column="1"
-                        Height="24"
                         Orientation="Horizontal"
-                        HorizontalAlignment="Right" VerticalAlignment="Bottom">
+                        HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                        Margin="10">
                 <Button Content="OK"
                         Command="{Binding OkCommand}"
-                        Margin="0,0,10,0"
-                        Width="72" />
+                        Width="70"
+                        Margin="0,0,10,0" />
                 <Button Content="Cancel"
                         Command="{Binding CancelCommand}"
-                        Width="72" />
+                        Width="70" />
             </StackPanel>
         </Grid>
     </Grid>

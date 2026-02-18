@@ -3,32 +3,41 @@ using CommunityToolkit.Mvvm.Input;
 using FELauncher.Shared;
 using FELauncher.Shared.Contracts.IO;
 using FELauncher.Shared.Contracts.Settings;
+using FELauncher.UI.Desktop.ViewModels.Navigation;
+using System.Collections.ObjectModel;
 
 namespace FELauncher.UI.Desktop.ViewModels
 {
-    internal sealed partial class SettingsWindowViewModel(ISettingsStore settingsStore) : ObservableObject
+    public sealed partial class SettingsWindowViewModel : ObservableObject
     {
         public event Action? RequestClose;
 
-        private FELauncherSettings? _settings = new();
+        private readonly ISettingsStore _settingsStore;
 
         public string AppVersion { get; } = AppConstants.AppVersion;
+        public ObservableCollection<NavItem> NavItems { get; } = [];
+        public GeneralSectionViewModel GeneralSection { get; } = new();
+        public FrontendSectionViewModel FrontendSection { get; } = new();
+        public PreProcessesSectionViewModel PreProcessesSection { get; } = new();
 
-        [ObservableProperty] private bool _startWithWindows;
-        [ObservableProperty] private bool _autoLaunchSession;
-        [ObservableProperty] private bool _disableNotifications;
-        [ObservableProperty] private int _endSessionGracePeriod;
-
-        [ObservableProperty] private string? _frontendPath;
-        [ObservableProperty] private string? _frontendArgs;
-        [ObservableProperty] private int _frontendDelaySeconds;
-        [ObservableProperty] private bool _frontendNotifyOnExit;
-        [ObservableProperty] private bool _frontendEndSessionOnExit;
+        [ObservableProperty]
+        private NavItem? _selectedNavItem;
 
         [ObservableProperty]
         [NotifyCanExecuteChangedFor(nameof(OkCommand))]
         [NotifyCanExecuteChangedFor(nameof(CancelCommand))]
         private bool _isSaving;
+
+        public SettingsWindowViewModel(ISettingsStore settingsStore)
+        {
+            _settingsStore = settingsStore;
+
+            NavItems.Add(new NavItem { Title = "General", Content = GeneralSection });
+            NavItems.Add(new NavItem { Title = "Frontend", Content = FrontendSection });
+            NavItems.Add(new NavItem { Title = "Pre-processes", Content = PreProcessesSection });
+
+            SelectedNavItem = NavItems[0];
+        }
 
         private bool CanOk => !IsSaving;
         [RelayCommand(CanExecute = nameof(CanOk))]
@@ -39,8 +48,8 @@ namespace FELauncher.UI.Desktop.ViewModels
             IsSaving = true;
             try
             {
-                ApplyToSettings();
-                await settingsStore.SaveSettingsAsync(_settings!);
+                var settings = BuildSettingsToSave();
+                await _settingsStore.SaveSettingsAsync(settings);
             }
             finally
             {
@@ -55,34 +64,22 @@ namespace FELauncher.UI.Desktop.ViewModels
 
         public async Task InitializeAsync()
         {
-            _settings = await settingsStore.GetSettingsAsync();
+            var settings = await _settingsStore.GetSettingsAsync() ?? new FELauncherSettings();
 
-            StartWithWindows         = _settings?.StartWithWindows ?? false;
-            AutoLaunchSession        = _settings?.AutoLaunchSession ?? false;
-            DisableNotifications     = _settings?.DisableNotifications ?? false;
-            EndSessionGracePeriod    = _settings?.EndSessionGracePeriod ?? 0;
-
-            FrontendPath             = _settings?.Frontend.Path ?? "";
-            FrontendArgs             = _settings?.Frontend.Arguments ?? "";
-            FrontendDelaySeconds     = _settings?.Frontend.DelaySeconds ?? 0;
-            FrontendNotifyOnExit     = _settings?.Frontend.NotifyOnExit ?? false;
-            FrontendEndSessionOnExit = _settings?.Frontend.EndSessionOnExit ?? false;
+            GeneralSection.LoadFrom(settings);
+            FrontendSection.LoadFrom(settings);
+            PreProcessesSection.LoadFrom(settings);
         }
 
-        private void ApplyToSettings()
+        private FELauncherSettings BuildSettingsToSave()
         {
-            _settings ??= new FELauncherSettings();
-            _settings.StartWithWindows      = StartWithWindows;
-            _settings.AutoLaunchSession     = AutoLaunchSession;
-            _settings.DisableNotifications  = DisableNotifications;
-            _settings.EndSessionGracePeriod = EndSessionGracePeriod;
+            var settings = new FELauncherSettings();
 
-            _settings.Frontend ??= new ProcessSettings();
-            _settings.Frontend.Path             = FrontendPath ?? "";
-            _settings.Frontend.Arguments        = FrontendArgs;
-            _settings.Frontend.DelaySeconds     = FrontendDelaySeconds;
-            _settings.Frontend.NotifyOnExit     = FrontendNotifyOnExit;
-            _settings.Frontend.EndSessionOnExit = FrontendEndSessionOnExit;
+            GeneralSection.ApplyTo(settings);
+            FrontendSection.ApplyTo(settings);
+            PreProcessesSection.ApplyTo(settings);
+
+            return settings;
         }
     }
 }
