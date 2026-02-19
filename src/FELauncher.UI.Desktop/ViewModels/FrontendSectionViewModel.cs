@@ -3,7 +3,7 @@ using FELauncher.Shared.Contracts.Settings;
 
 namespace FELauncher.UI.Desktop.ViewModels
 {
-    public sealed partial class FrontendSectionViewModel : ObservableObject
+    internal sealed partial class FrontendSectionViewModel : ObservableObject
     {
         [ObservableProperty] private string? _frontendPath;
         [ObservableProperty] private string? _frontendArgs;

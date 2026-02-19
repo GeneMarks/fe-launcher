@@ -8,7 +8,7 @@ using System.Collections.ObjectModel;
 
 namespace FELauncher.UI.Desktop.ViewModels
 {
-    public sealed partial class SettingsWindowViewModel : ObservableObject
+    internal sealed partial class SettingsWindowViewModel : ObservableObject
     {
         public event Action? RequestClose;
 

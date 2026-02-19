@@ -4,7 +4,7 @@ using System.Collections.ObjectModel;
 
 namespace FELauncher.UI.Desktop.ViewModels
 {
-    public sealed partial class PreProcessesSectionViewModel : ObservableObject
+    internal sealed partial class PreProcessesSectionViewModel : ObservableObject
     {
         public ObservableCollection<ProcessSettings> PreProcesses { get; } = [];
 

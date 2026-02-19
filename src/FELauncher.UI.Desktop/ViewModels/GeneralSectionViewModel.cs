@@ -3,7 +3,7 @@ using FELauncher.Shared.Contracts.Settings;
 
 namespace FELauncher.UI.Desktop.ViewModels
 {
-    public sealed partial class GeneralSectionViewModel : ObservableObject
+    internal sealed partial class GeneralSectionViewModel : ObservableObject
     {
         [ObservableProperty] private bool _startWithWindows;
         [ObservableProperty] private bool _autoLaunchSession;
