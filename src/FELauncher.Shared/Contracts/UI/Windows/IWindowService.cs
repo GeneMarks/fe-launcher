@@ -1,6 +1,6 @@
 ﻿namespace FELauncher.Shared.Contracts.UI.Windows
 {
-    public interface ISettingsWindowService
+    public interface IWindowService
     {
         Task ShowWindowAsync();
     }

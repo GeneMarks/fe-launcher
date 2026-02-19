@@ -8,7 +8,7 @@ namespace FELauncher.UI.Desktop.Services.Windows
 {
     internal sealed class SettingsWindowService(
         IUiDispatcher ui,
-        ISettingsStore settingsStore) : ISettingsWindowService
+        ISettingsStore settingsStore) : IWindowService
     {
         private SettingsWindow? _window;
         private SettingsWindowViewModel? _vm;
