@@ -5,7 +5,6 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:FELauncher.UI.Desktop.Views"
         xmlns:viewmodels="clr-namespace:FELauncher.UI.Desktop.ViewModels"
-        xmlns:sections="clr-namespace:FELauncher.UI.Desktop.Views.Sections"
         d:DataContext="{d:DesignInstance Type=viewmodels:SettingsWindowViewModel}"
         mc:Ignorable="d"
         Title="FE Launcher Settings"
@@ -19,9 +18,9 @@
         ThemeMode="Light">
 
     <Window.Resources>
-        <DataTemplate DataType="{x:Type viewmodels:GeneralSectionViewModel}"><sections:GeneralSection /></DataTemplate>
-        <DataTemplate DataType="{x:Type viewmodels:FrontendSectionViewModel}"><sections:FrontendSection /></DataTemplate>
-        <DataTemplate DataType="{x:Type viewmodels:PreProcessesSectionViewModel}"><sections:PreProcessesSection /></DataTemplate>
+        <DataTemplate DataType="{x:Type viewmodels:GeneralSectionViewModel}"><local:GeneralSection /></DataTemplate>
+        <DataTemplate DataType="{x:Type viewmodels:FrontendSectionViewModel}"><local:FrontendSection /></DataTemplate>
+        <DataTemplate DataType="{x:Type viewmodels:PreProcessesSectionViewModel}"><local:PreProcessesSection /></DataTemplate>
     </Window.Resources>
 
     <Grid>

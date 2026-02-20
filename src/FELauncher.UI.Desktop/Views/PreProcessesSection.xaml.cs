@@ -1,6 +1,6 @@
 ﻿using System.Windows.Controls;
 
-namespace FELauncher.UI.Desktop.Views.Sections
+namespace FELauncher.UI.Desktop.Views
 {
     public partial class PreProcessesSection : UserControl
     {
