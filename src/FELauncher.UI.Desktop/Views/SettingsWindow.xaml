@@ -73,11 +73,11 @@
                         Margin="10">
                 <Button Content="OK"
                         Command="{Binding OkCommand}"
-                        Width="70"
-                        Margin="0,0,10,0" />
+                        Width="70" />
                 <Button Content="Cancel"
                         Command="{Binding CancelCommand}"
-                        Width="70" />
+                        Width="70"
+                        Margin="10,0,0,0" />
             </StackPanel>
         </Grid>
     </Grid>
