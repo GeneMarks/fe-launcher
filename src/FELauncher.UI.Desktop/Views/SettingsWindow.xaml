@@ -39,16 +39,9 @@
             <ListView Grid.Column="0"
                       Margin="10,10,10,0"
                       ItemsSource="{Binding NavItems}"
+                      DisplayMemberPath="Title"
                       SelectedItem="{Binding SelectedNavItem}"
-                      SelectionMode="Single">
-                <ListView.ItemTemplate>
-                    <DataTemplate>
-                        <TextBlock Text="{Binding Title}"
-                                   VerticalAlignment="Center"
-                                   Margin="8,6" />
-                    </DataTemplate>
-                </ListView.ItemTemplate>
-            </ListView>
+                      SelectionMode="Single" />
 
             <ContentControl Grid.Column="1" Content="{Binding SelectedNavItem.Content}" />
         </Grid>
