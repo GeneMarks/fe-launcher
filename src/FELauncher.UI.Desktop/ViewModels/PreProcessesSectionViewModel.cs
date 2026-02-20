@@ -20,7 +20,7 @@ namespace FELauncher.UI.Desktop.ViewModels
 
         public void ApplyTo(FELauncherSettings settings)
         {
-            settings.PreProcesses = PreProcesses.ToList();
+            settings.PreProcesses = [.. PreProcesses];
         }
     }
 }
