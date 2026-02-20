@@ -20,8 +20,7 @@ namespace FELauncher.UI.Desktop.ViewModels
         public FrontendSectionViewModel FrontendSection { get; } = new();
         public PreProcessesSectionViewModel PreProcessesSection { get; } = new();
 
-        [ObservableProperty]
-        private NavItem? _selectedNavItem;
+        [ObservableProperty] private NavItem? _selectedNavItem;
 
         [ObservableProperty]
         [NotifyCanExecuteChangedFor(nameof(OkCommand))]
