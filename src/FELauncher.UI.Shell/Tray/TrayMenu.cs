@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using FELauncher.Shared;
+using System.Drawing;
 using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.UI.WindowsAndMessaging;
@@ -9,6 +10,7 @@ namespace FELauncher.UI.Shell.Tray
     {
         private struct Items
         {
+            public const nuint Build               = 2000;
             public const nuint Launch              = 1000;
             public const nuint EndSession          = 1010;
             public const nuint InstallDependencies = 1020;
@@ -49,6 +51,8 @@ namespace FELauncher.UI.Shell.Tray
             bool isSessionActive,
             bool canEndSession)
         {
+            AppendMenuItem(menu, Items.Build, $"Build {AppConstants.AppVersion}", true);
+            AppendMenuItem(menu);
             AppendMenuItem(menu,
                 isSessionActive ? Items.EndSession : Items.Launch,
                 isSessionActive ? "End session" : "Launch",
