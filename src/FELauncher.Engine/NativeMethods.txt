@@ -1,4 +1,3 @@
-AssignProcessToJobObject
 CloseHandle
 CreateIoCompletionPort
 CreateJobObject

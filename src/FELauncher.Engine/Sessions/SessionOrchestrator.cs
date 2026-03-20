@@ -3,9 +3,9 @@ using FELauncher.Engine.JobObjects;
 using FELauncher.Engine.Processes;
 using FELauncher.Engine.Processes.Runner;
 using FELauncher.Engine.Sessions.Logging;
-using FELauncher.Engine.Settings;
-using FELauncher.Shared.Contracts;
 using FELauncher.Shared.Contracts.Sessions;
+using FELauncher.Shared.Contracts.Settings;
+using FELauncher.Shared.Contracts.UI;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -240,20 +240,13 @@ namespace FELauncher.Engine.Sessions
                 }
             }
 
-            if (endSessionOnExit)
-            {
-                notifier.Notify(
-                    "Ending Session",
-                    $"Ending the current session because '{processName}' has terminated.");
-
-                return;
-            }
+            var toastMessage = endSessionOnExit
+                ? $"'{processName}' has terminated.\nEnding the current session."
+                : $"'{processName}' has terminated.";
 
             if (e.NotifyOnExit)
             {
-                notifier.Notify(
-                    "Process Exited",
-                    $"'{processName}' has terminated.");
+                notifier.Notify("Process Exited", toastMessage);
             }
         }
 

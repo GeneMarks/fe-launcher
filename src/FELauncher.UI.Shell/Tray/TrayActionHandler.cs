@@ -1,30 +1,27 @@
 ﻿using FELauncher.Shared;
 using FELauncher.Shared.Contracts.Sessions;
+using FELauncher.Shared.Contracts.UI.Windows;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 
 namespace FELauncher.UI.Shell.Tray
 {
     internal sealed class TrayActionHandler(
-        ILogger<TrayActionHandler> logger,
         IHostApplicationLifetime lifetime,
-        ISessionOrchestrator sessionOrchestrator)
+        ISessionOrchestrator sessionOrchestrator,
+        ISettingsWindowService settingsWindowService)
     {
         public SessionStateSnapshot GetSessionState()
             => sessionOrchestrator.GetSessionState();
 
-        public async void LaunchFrontend()
-            => await sessionOrchestrator.StartNewSessionAsync();
+        public void LaunchFrontend()
+            => _ = sessionOrchestrator.StartNewSessionAsync();
 
         public void EndSession()
             => sessionOrchestrator.RequestCancelSession();
 
         public void OpenSettings()
-        {
-            // todo
-            return;
-        }
+            => _ = settingsWindowService.ShowWindowAsync();
 
         public void Exit()
             => lifetime.StopApplication();

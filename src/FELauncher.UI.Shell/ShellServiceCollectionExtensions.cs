@@ -1,4 +1,4 @@
-﻿using FELauncher.Shared.Contracts;
+﻿using FELauncher.Shared.Contracts.UI;
 using FELauncher.UI.Shell.Notifications;
 using FELauncher.UI.Shell.Tray;
 using Microsoft.Extensions.DependencyInjection;

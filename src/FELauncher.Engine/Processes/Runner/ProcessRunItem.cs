@@ -1,4 +1,4 @@
-﻿using FELauncher.Engine.Settings;
+﻿using FELauncher.Shared.Contracts.Settings;
 
 namespace FELauncher.Engine.Processes.Runner
 {

@@ -1,5 +1,5 @@
 using FELauncher.Engine.IO.Logging;
-using FELauncher.Shared.Contracts;
+using FELauncher.Shared.Contracts.IO;
 using Microsoft.Extensions.Logging;
 
 namespace FELauncher.Engine.IO
@@ -8,10 +8,6 @@ namespace FELauncher.Engine.IO
 	{
         private readonly string _basePath = AppContext.BaseDirectory;
 		
-		/// <summary>
-		/// Resolves relative paths by adding application directory to base.
-		/// </summary>
-		/// <returns>A resolved absolute path.</returns>
         public string ResolvePath(string? path)
 		{
 			if (string.IsNullOrEmpty(path))

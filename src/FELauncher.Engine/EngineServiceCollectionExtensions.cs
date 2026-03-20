@@ -3,9 +3,9 @@ using FELauncher.Engine.JobObjects;
 using FELauncher.Engine.Processes;
 using FELauncher.Engine.Processes.Runner;
 using FELauncher.Engine.Sessions;
-using FELauncher.Engine.Settings;
-using FELauncher.Shared.Contracts;
+using FELauncher.Shared.Contracts.IO;
 using FELauncher.Shared.Contracts.Sessions;
+using FELauncher.Shared.Contracts.Settings;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -19,6 +19,7 @@ namespace FELauncher.Engine
             services.AddSingleton<IPathResolver, PathResolver>();
             services.AddSingleton<ISessionOrchestrator, SessionOrchestrator>();
             services.AddSingleton<ISessionLoggerScopeProvider, SessionLoggerScopeProvider>();
+            services.AddSingleton<ISettingsStore, JsonSettingsStore>();
 
             // Internal services
             services.AddSingleton<ProcessFactory>();
@@ -32,7 +33,7 @@ namespace FELauncher.Engine
             this IServiceCollection services,
             IConfiguration config)
         {
-            services.Configure<FELauncherSettings>(config.GetSection("FELauncher"));
+            services.Configure<FELauncherSettings>(config);
 
             return services;
         }

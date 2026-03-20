@@ -13,7 +13,7 @@
         Task StartNewSessionAsync();
 
         /// <summary>
-        /// Requests cancellation from the cancellation token source if the session is in a cancelable state.
+        /// Requests cancellation from the cancellation token source if the current session is in a cancelable state.
         /// </summary>
         void RequestCancelSession();
     }
