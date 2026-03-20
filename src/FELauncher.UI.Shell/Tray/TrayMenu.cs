@@ -12,7 +12,7 @@ namespace FELauncher.UI.Shell.Tray
             public const nuint Launch              = 1000;
             public const nuint EndSession          = 1010;
             public const nuint InstallDependencies = 1020;
-            public const nuint Settings             = 1030;
+            public const nuint Settings            = 1030;
             public const nuint CheckUpdates        = 1040;
             public const nuint Exit                = 1050;
         }
