@@ -11,7 +11,6 @@ namespace FELauncher.Host.Bootstrap
         {
             EnsurePathExists(AppPaths.AppDataDirectory);
             EnsurePathExists(AppPaths.HooksDirectory);
-            EnsurePathExists(AppPaths.DependenciesDirectory);
 
             EnsureSettingsFileExists();
         }
