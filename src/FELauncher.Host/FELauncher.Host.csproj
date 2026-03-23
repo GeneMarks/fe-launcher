@@ -13,10 +13,6 @@
         <PublishSingleFile>true</PublishSingleFile>
         <SelfContained>true</SelfContained>
         <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
-        <PublishTrimmed>true</PublishTrimmed>
-        <IsTrimmable>false</IsTrimmable>
-        <TrimMode>partial</TrimMode>
-        <_SuppressWpfTrimError>true</_SuppressWpfTrimError>
         <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
         <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
         <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
