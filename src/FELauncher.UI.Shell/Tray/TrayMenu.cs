@@ -55,12 +55,17 @@ namespace FELauncher.UI.Shell.Tray
                 isSessionActive ? Items.EndSession : Items.Launch,
                 isSessionActive ? "End session" : "Launch",
                 disabled: isSessionActive && !canEndSession);
+
             AppendMenuItem(menu);
             AppendMenuItem(menu, Items.InstallDependencies, "Install dependencies", isSessionActive);
+
+            AppendMenuItem(menu);
             AppendMenuItem(menu, Items.Settings, "Open settings", isSessionActive);
+
             AppendMenuItem(menu);
             AppendMenuItem(menu, Items.Build, $"Build {AppConstants.AppVersion}", true);
             AppendMenuItem(menu, Items.CheckUpdates, "Check updates", false);
+
             AppendMenuItem(menu);
             AppendMenuItem(menu, Items.Exit, "Exit", isSessionActive);
         }
