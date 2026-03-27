@@ -15,9 +15,15 @@ It acts as a wrapper layer around any modern arcade frontend of choice, allowing
 - Add custom scripts to tray menu for easy user access, e.g., a dependency installer
 
 ## Installation
+> [!IMPORTANT]
+> *FE Launcher* is intended for recent versions of Windows 10 (1809+) and Windows 11.
+
 *FE Launcher* is as a completely portable system tray application, distributed as a single binary. It is recommended to place the executable at the root of your arcade drive.
 
 Upon first startup, *FE Launcher* will create a folder named `felauncher` in the current directory. This folder will contain the log and settings files, and a `hooks` directory for scripts.
+
+> [!NOTE]
+> `felauncher.exe` requires administrator privileges to allow seamless process launching without UAC prompts and to manage startup tasks via Task Scheduler.
 
 ## Development
 The solution consists of 6 projects:
@@ -29,13 +35,30 @@ The solution consists of 6 projects:
 | `FELauncher.Engine` | The core implementation of the app's features |
 | `FELauncher.UI.Shell` | Native system tray menu and Windows 10 notification functionality |
 | `FELauncher.UI.Desktop` | WPF settings GUI |
-| `FELauncher.Tests` | Unit/integration tests |
+| `FELauncher.Tests` | Unit tests |
 
+### Building
 Releases are built by publishing the `FELauncher.Host` project with the included `x64.pubxml` profile.
+
+To publish with cli:
+```shell
+dotnet publish src/FELauncher.Host/FELauncher.Host.csproj -p:PublishProfile=x64
+```
+
+This will output the executable `felauncher.exe` located in the build folder `bin/x64/`.
+
+### Testing
+Unit tests are located in the `FELauncher.Tests` project. `xUnit` is used for testing.
+
+To run all tests:
+```shell
+dotnet test
+```
 
 ## Roadmap
 ### v0.1
 1. Ensure current feature set works as expected.
+2. Write user documentation
 
 ### Future Goals
 1. Support CIFS login with Credential Manager and provide Lua API for managing symlinks in scripts.
