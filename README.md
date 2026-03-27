@@ -64,3 +64,6 @@ dotnet test
 1. Support CIFS login with Credential Manager and provide Lua API for managing symlinks in scripts.
 2. Add support for multiple sessions.
 3. Implement a sleep timer: e.g., Wait `x` minutes before ending session and shutting down or sleeping Windows.
+
+## Licensing
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
