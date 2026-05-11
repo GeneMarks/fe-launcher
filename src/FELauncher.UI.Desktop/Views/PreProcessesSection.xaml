@@ -5,7 +5,9 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:FELauncher.UI.Desktop.Views"
              xmlns:converters="clr-namespace:FELauncher.UI.Desktop.Views.Converters"
-             mc:Ignorable="d">
+             mc:Ignorable="d"
+             xmlns:md="https://github.com/fantasticfiasco/mvvm-dialogs"
+             md:DialogServiceViews.IsRegistered="True">
 
     <UserControl.Resources>
         <converters:ProcessPathConverter x:Key="ProcessPathConverter" />

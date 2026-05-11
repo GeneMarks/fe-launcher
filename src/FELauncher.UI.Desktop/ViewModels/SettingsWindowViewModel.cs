@@ -4,6 +4,7 @@ using FELauncher.Shared;
 using FELauncher.Shared.Contracts.IO;
 using FELauncher.Shared.Contracts.Settings;
 using FELauncher.UI.Desktop.ViewModels.Navigation;
+using MvvmDialogs;
 using System.Collections.ObjectModel;
 
 namespace FELauncher.UI.Desktop.ViewModels
@@ -18,7 +19,7 @@ namespace FELauncher.UI.Desktop.ViewModels
         public ObservableCollection<NavItem> NavItems { get; } = [];
         public GeneralSectionViewModel GeneralSection { get; } = new();
         public FrontendSectionViewModel FrontendSection { get; } = new();
-        public PreProcessesSectionViewModel PreProcessesSection { get; } = new();
+        public PreProcessesSectionViewModel PreProcessesSection { get; } = new(new DialogService());
 
         [ObservableProperty] private NavItem? _selectedNavItem;
 

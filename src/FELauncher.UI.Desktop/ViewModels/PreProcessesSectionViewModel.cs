@@ -2,12 +2,15 @@
 using CommunityToolkit.Mvvm.Input;
 using FELauncher.Shared.Contracts.Settings;
 using FELauncher.UI.Desktop.Views;
+using MvvmDialogs;
 using System.Collections.ObjectModel;
 
 namespace FELauncher.UI.Desktop.ViewModels
 {
     internal sealed partial class PreProcessesSectionViewModel : ObservableObject
     {
+        private readonly IDialogService _dialogService;
+
         public ObservableCollection<ProcessSettings> PreProcesses { get; } = [];
 
         [ObservableProperty]
@@ -15,18 +18,23 @@ namespace FELauncher.UI.Desktop.ViewModels
             nameof(MoveDownCommand), nameof(MoveUpCommand))]
         private ProcessSettings? _selectedPreProcess;
 
+        public PreProcessesSectionViewModel(IDialogService dialogService)
+        {
+            _dialogService = dialogService;
+        }
+
         [RelayCommand]
         private void Add()
         {
             var p = new ProcessSettings();
             PreProcesses.Add(p);
-            CreatePreProcessWindow(p);
+            ShowPreProcessDialog(p);
         }
 
         private bool CanEdit => SelectedPreProcess is not null;
         [RelayCommand(CanExecute = nameof(CanEdit))]
         private void Edit()
-            => CreatePreProcessWindow(SelectedPreProcess!);
+            => ShowPreProcessDialog(SelectedPreProcess!);
 
         private bool CanDelete => SelectedPreProcess is not null;
         [RelayCommand(CanExecute = nameof(CanDelete))]
@@ -67,19 +75,14 @@ namespace FELauncher.UI.Desktop.ViewModels
             }
         }
 
-        private void CreatePreProcessWindow(ProcessSettings processSettings)
+        private void ShowPreProcessDialog(ProcessSettings processSettings)
         {
             var vm = new PreProcessWindowViewModel
             {
                 ProcessSettings = processSettings
             };
 
-            var window = new PreProcessWindow
-            {
-                DataContext = vm
-            };
-
-            window.ShowDialog();
+            _ = _dialogService.ShowDialog(this, vm);
         }
 
         public void LoadFrom(FELauncherSettings settings)
