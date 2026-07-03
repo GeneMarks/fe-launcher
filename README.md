@@ -4,7 +4,7 @@ A portable arcade frontend session manager for Windows 10+. For use with HyperSp
 ![Native system tray menu](assets/ss_01.png) ![Settings GUI](assets/ss_02.png)
 
 ## Overview
-*FE Launcher* is a rock-solid session manager that provides a variety of functionality allowing users to turn a Windows PC into a managed arcade machine.
+*FE Launcher* is a session manager that provides a variety of functionality allowing users to turn a Windows PC into a managed arcade machine.
 
 It acts as a wrapper layer around any modern arcade frontend of choice, allowing you to launch pre-processes, run Lua hooks, and manage sessions on an OS level. If a pre-process or its children unexpectedly terminates, *FE Launcher* can automatically end or restart the session.
 
