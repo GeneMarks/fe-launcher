@@ -4,7 +4,9 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:FELauncher.UI.Desktop.Views"
-             mc:Ignorable="d">
+             mc:Ignorable="d"
+             xmlns:md="https://github.com/fantasticfiasco/mvvm-dialogs"
+             md:DialogServiceViews.IsRegistered="True">
 
     <StackPanel>
         <Grid>
@@ -23,6 +25,7 @@
                      VerticalContentAlignment="Center" />
             <Button Grid.Column="2"
                     Content="Choose file"
+                    Command="{Binding ShowOpenFileDialogCommand}"
                     Margin="6,0,0,0" />
         </Grid>
 

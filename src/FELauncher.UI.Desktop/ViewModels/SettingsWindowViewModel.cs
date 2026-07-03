@@ -18,8 +18,8 @@ namespace FELauncher.UI.Desktop.ViewModels
         public string AppVersion { get; } = AppConstants.AppVersion;
         public ObservableCollection<NavItem> NavItems { get; } = [];
         public GeneralSectionViewModel GeneralSection { get; } = new();
-        public FrontendSectionViewModel FrontendSection { get; } = new();
-        public PreProcessesSectionViewModel PreProcessesSection { get; } = new(new DialogService());
+        public FrontendSectionViewModel FrontendSection { get; }
+        public PreProcessesSectionViewModel PreProcessesSection { get; }
 
         [ObservableProperty] private NavItem? _selectedNavItem;
 
@@ -31,6 +31,11 @@ namespace FELauncher.UI.Desktop.ViewModels
         public SettingsWindowViewModel(ISettingsStore settingsStore)
         {
             _settingsStore = settingsStore;
+
+            var dialogService = new DialogService();
+
+            FrontendSection = new FrontendSectionViewModel(dialogService);
+            PreProcessesSection = new PreProcessesSectionViewModel(dialogService);
 
             NavItems.Add(new NavItem { Title = "General", Content = GeneralSection });
             NavItems.Add(new NavItem { Title = "Frontend", Content = FrontendSection });

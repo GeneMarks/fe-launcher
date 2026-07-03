@@ -7,7 +7,7 @@
              mc:Ignorable="d">
 
     <Border Margin="15">
-        <local:ProcessSettingsUserControl DataContext="{Binding FrontendSettings}" />
+        <local:ProcessSettingsUserControl DataContext="{Binding FrontendSettingsViewModel}" />
     </Border>
     
 </UserControl>

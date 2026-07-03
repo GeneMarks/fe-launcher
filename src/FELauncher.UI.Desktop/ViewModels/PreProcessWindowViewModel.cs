@@ -1,5 +1,4 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
-using FELauncher.Shared.Contracts.Settings;
 using MvvmDialogs;
 
 namespace FELauncher.UI.Desktop.ViewModels
@@ -8,7 +7,12 @@ namespace FELauncher.UI.Desktop.ViewModels
     {
         private bool? _dialogResult;
 
-        public required ProcessSettings ProcessSettings { get; init; }
+        public ProcessSettingsUserControlViewModel ProcessSettingsViewModel { get; }
+
+        public PreProcessWindowViewModel(ProcessSettingsUserControlViewModel processSettingsViewModel)
+        {
+            ProcessSettingsViewModel = processSettingsViewModel;
+        }
 
         public bool? DialogResult
         {

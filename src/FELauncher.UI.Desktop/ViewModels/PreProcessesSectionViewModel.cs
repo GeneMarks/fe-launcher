@@ -1,7 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FELauncher.Shared.Contracts.Settings;
-using FELauncher.UI.Desktop.Views;
 using MvvmDialogs;
 using System.Collections.ObjectModel;
 
@@ -11,12 +10,12 @@ namespace FELauncher.UI.Desktop.ViewModels
     {
         private readonly IDialogService _dialogService;
 
-        public ObservableCollection<ProcessSettings> PreProcesses { get; } = [];
+        public ObservableCollection<ProcessSettingsUserControlViewModel> PreProcesses { get; } = [];
 
         [ObservableProperty]
         [NotifyCanExecuteChangedFor(nameof(EditCommand), nameof(DeleteCommand),
             nameof(MoveDownCommand), nameof(MoveUpCommand))]
-        private ProcessSettings? _selectedPreProcess;
+        private ProcessSettingsUserControlViewModel? _selectedPreProcess;
 
         public PreProcessesSectionViewModel(IDialogService dialogService)
         {
@@ -26,9 +25,12 @@ namespace FELauncher.UI.Desktop.ViewModels
         [RelayCommand]
         private void Add()
         {
-            var p = new ProcessSettings();
-            PreProcesses.Add(p);
-            ShowPreProcessDialog(p);
+            var vm = new ProcessSettingsUserControlViewModel(
+                _dialogService,
+                new ProcessSettings());
+
+            PreProcesses.Add(vm);
+            ShowPreProcessDialog(vm);
         }
 
         private bool CanEdit => SelectedPreProcess is not null;
@@ -75,12 +77,9 @@ namespace FELauncher.UI.Desktop.ViewModels
             }
         }
 
-        private void ShowPreProcessDialog(ProcessSettings processSettings)
+        private void ShowPreProcessDialog(ProcessSettingsUserControlViewModel processSettingsViewModel)
         {
-            var vm = new PreProcessWindowViewModel
-            {
-                ProcessSettings = processSettings
-            };
+            var vm = new PreProcessWindowViewModel(processSettingsViewModel);
 
             _ = _dialogService.ShowDialog(this, vm);
         }
@@ -91,13 +90,17 @@ namespace FELauncher.UI.Desktop.ViewModels
 
             foreach (var preProcess in settings.PreProcesses)
             {
-                PreProcesses.Add(new ProcessSettings(preProcess));
+                var vm = new ProcessSettingsUserControlViewModel(
+                    _dialogService,
+                    new ProcessSettings(preProcess));
+
+                PreProcesses.Add(vm);
             }
         }
 
         public void ApplyTo(FELauncherSettings settings)
         {
-            settings.PreProcesses = [.. PreProcesses];
+            settings.PreProcesses = [.. PreProcesses.Select(p => p.ProcessSettings)];
         }
     }
 }

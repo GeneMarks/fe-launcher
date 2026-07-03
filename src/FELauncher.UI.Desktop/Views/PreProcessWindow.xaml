@@ -14,7 +14,7 @@
         ThemeMode="Light">
 
     <Border Margin="15">
-        <local:ProcessSettingsUserControl DataContext="{Binding ProcessSettings}" />
+        <local:ProcessSettingsUserControl DataContext="{Binding ProcessSettingsViewModel}" />
     </Border>
 
 </Window>
