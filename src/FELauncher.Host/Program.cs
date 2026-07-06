@@ -81,7 +81,7 @@ class Program
 
         try
         {
-            var logEventLevel = ParseLogEventLevel(config["FELauncher:LogLevel"], out bool couldParseLogEventLevel);
+            var logEventLevel = ParseLogEventLevel(config["LogLevel"], out bool couldParseLogEventLevel);
 
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Is(logEventLevel)
