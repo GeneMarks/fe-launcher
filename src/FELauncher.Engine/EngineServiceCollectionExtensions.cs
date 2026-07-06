@@ -20,6 +20,7 @@ namespace FELauncher.Engine
             services.AddSingleton<ISessionOrchestrator, SessionOrchestrator>();
             services.AddSingleton<ISessionLoggerScopeProvider, SessionLoggerScopeProvider>();
             services.AddSingleton<ISettingsStore, JsonSettingsStore>();
+            services.AddScoped<IStartupSessionInitializer, StartupSessionInitializer>();
 
             // Internal services
             services.AddSingleton<ProcessFactory>();

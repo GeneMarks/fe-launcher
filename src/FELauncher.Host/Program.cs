@@ -3,10 +3,12 @@ using FELauncher.Host;
 using FELauncher.Host.Bootstrap;
 using FELauncher.Host.Exceptions;
 using FELauncher.Shared;
+using FELauncher.Shared.Contracts.Sessions;
 using FELauncher.UI.Desktop;
 using FELauncher.UI.Shell;
 using FELauncher.UI.Shell.TaskDialog;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Serilog;
@@ -127,6 +129,12 @@ class Program
             builder.Services.AddShellServices();
 
             using IHost host = builder.Build();
+
+            using (IServiceScope scope = host.Services.CreateScope())
+            {
+                var startupSessionInitializer = scope.ServiceProvider.GetRequiredService<IStartupSessionInitializer>();
+                startupSessionInitializer.LaunchStartupSessionIfEnabled();
+            }
 
             host.Run();
             return 0;
