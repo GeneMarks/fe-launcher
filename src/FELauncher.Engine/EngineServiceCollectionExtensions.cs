@@ -2,6 +2,7 @@
 using FELauncher.Engine.JobObjects;
 using FELauncher.Engine.Processes;
 using FELauncher.Engine.Processes.Runner;
+using FELauncher.Engine.Scheduling;
 using FELauncher.Engine.Sessions;
 using FELauncher.Shared.Contracts.IO;
 using FELauncher.Shared.Contracts.Sessions;
@@ -26,6 +27,7 @@ namespace FELauncher.Engine
             services.AddSingleton<ProcessFactory>();
             services.AddSingleton<ProcessRunner>();
             services.AddSingleton<JobObjectManager>();
+            services.AddHostedService<StartupTaskScheduler>();
 
             return services;
         }
