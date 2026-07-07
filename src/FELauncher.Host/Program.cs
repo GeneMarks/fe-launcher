@@ -130,6 +130,10 @@ class Program
 
             using IHost host = builder.Build();
 
+            // Register shutdown message with lifetime service
+            IHostApplicationLifetime lifetime = host.Services.GetRequiredService<IHostApplicationLifetime>();
+            lifetime.ApplicationStopping.Register(() => Log.Information("Shutting down FE Launcher..."));
+
             using (IServiceScope scope = host.Services.CreateScope())
             {
                 var startupSessionInitializer = scope.ServiceProvider.GetRequiredService<IStartupSessionInitializer>();
