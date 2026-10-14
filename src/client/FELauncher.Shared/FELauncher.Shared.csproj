@@ -14,8 +14,4 @@
 		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.1" />
 	</ItemGroup>
 
-	<ItemGroup>
-        <EmbeddedResource Include="..\..\assets\win_ico_16.ico" LogicalName="FELauncher.Shared.Assets.win_ico_16.ico" />
-    </ItemGroup>
-
 </Project>

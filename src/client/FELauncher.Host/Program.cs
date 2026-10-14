@@ -4,7 +4,6 @@ using FELauncher.Host.Bootstrap;
 using FELauncher.Host.Exceptions;
 using FELauncher.Shared;
 using FELauncher.Shared.Contracts.Sessions;
-using FELauncher.UI.Desktop;
 using FELauncher.UI.Shell;
 using FELauncher.UI.Shell.TaskDialog;
 using Microsoft.Extensions.Configuration;
@@ -125,7 +124,6 @@ class Program
 
             builder.Services.ConfigureEngineSettings(builder.Configuration);
             builder.Services.AddEngineServices();
-            builder.Services.AddDesktopServices();
             builder.Services.AddShellServices();
 
             using IHost host = builder.Build();
