@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0-windows10.0.17763.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="GitInfo" Version="3.6.0">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.1" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <EmbeddedResource Include="win_ico_16.ico" />
+	</ItemGroup>
+
+</Project>
