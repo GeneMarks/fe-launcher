@@ -1,0 +1,90 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+model Client {
+  id          String    @id @default(uuid())
+  machineName String    @unique
+  ipAddress   String?
+  connected   Boolean   @default(false)
+  lastSeen    DateTime  @updatedAt
+  createdAt   DateTime  @default(now())
+  sessions    Session[]
+}
+
+model Session {
+  id          String        @id @default(uuid())
+  clientId    String
+  client      Client        @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  status      SessionStatus @default(PENDING)
+  startedAt   DateTime      @default(now())
+  endedAt     DateTime?
+  processes   Process[]
+  createdAt   DateTime      @default(now())
+  updatedAt   Datetime      @updatedAt
+}
+
+model Process {
+  id            String          @id @default(uuid())
+  sessionId     String
+  session       Session         @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  phase         ProcessPhase
+  type          ProcessType     @default(EXECUTABLE)
+  target        String?         // Executable path
+  arguments     String?         // Optional CLI arguments for executable
+  scriptContent String?         // Lua script code
+  delayMs       Int             @default(0)
+  repeatCount   Int             @default(1)
+  order         Int
+  status        ProcessStatus   @default(PENDING)
+  exitCode      Int?
+  subProcesses  SubProcessLog[] // Child processes spawned by this process
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  @@index([sessionId, order])
+}
+
+model SubProcessLog {
+  id          String  @id @default(uuid())
+  processId   String
+  process     Process @relation(fields: [processId], references: [id], onDelete: Cascade)
+  processName String  // Name from Windows
+  winPid      Int     // PID from Windows
+
+  @@index([processId])
+}
+
+enum SessionStatus {
+  PENDING,
+  STARTED,
+  RUNNING_PRE_PROCESSES,
+  RUNNING_MAIN_PROCESS,
+  RUNNING_POST_PROCESSES,
+  COMPLETED,
+  ABORTED,
+  FAILED
+}
+
+enum ProcessPhase {
+  PRE,
+  MAIN,
+  POST
+}
+
+enum ProcessType {
+  EXECUTABLE,
+  LUA_SCRIPT
+}
+
+enum ProcessStatus {
+  PENDING,
+  RUNNING,
+  COMPLETED,
+  FAILED
+}
