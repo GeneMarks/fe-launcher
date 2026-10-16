@@ -26,7 +26,7 @@ model Session {
   endedAt     DateTime?
   processes   Process[]
   createdAt   DateTime      @default(now())
-  updatedAt   Datetime      @updatedAt
+  updatedAt   DateTime      @updatedAt
 }
 
 model Process {
@@ -61,30 +61,30 @@ model SubProcessLog {
 }
 
 enum SessionStatus {
-  PENDING,
-  STARTED,
-  RUNNING_PRE_PROCESSES,
-  RUNNING_MAIN_PROCESS,
-  RUNNING_POST_PROCESSES,
-  COMPLETED,
-  ABORTED,
+  PENDING
+  STARTED
+  RUNNING_PRE_PROCESSES
+  RUNNING_MAIN_PROCESS
+  RUNNING_POST_PROCESSES
+  COMPLETED
+  ABORTED
   FAILED
 }
 
 enum ProcessPhase {
-  PRE,
-  MAIN,
+  PRE
+  MAIN
   POST
 }
 
 enum ProcessType {
-  EXECUTABLE,
+  EXECUTABLE
   LUA_SCRIPT
 }
 
 enum ProcessStatus {
-  PENDING,
-  RUNNING,
-  COMPLETED,
+  PENDING
+  RUNNING
+  COMPLETED
   FAILED
 }
