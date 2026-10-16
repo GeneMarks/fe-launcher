@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:18-alpine
+    container_name: cabby_postgres_dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: cabby_dev
+      POSTGRES_HOST_AUTH_METHOD: "trust"
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql
+
+volumes:
+  pgdata:
