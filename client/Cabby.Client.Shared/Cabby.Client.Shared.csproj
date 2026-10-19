@@ -7,11 +7,11 @@
     </PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="GitInfo" Version="3.6.0">
+		<PackageReference Include="GitInfo" Version="3.6.1">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.1" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.13" />
 	</ItemGroup>
 
 	<ItemGroup>
