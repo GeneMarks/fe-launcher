@@ -38,7 +38,7 @@ namespace Cabby.Client.Engine.TaskScheduling
             TaskService.Instance.RootFolder.RegisterTaskDefinition(taskName, td);
 
             Microsoft.Win32.TaskScheduler.Task newTask = TaskService.Instance.GetTask(taskName);
-            if (newTask == null)
+            if (newTask is null)
             {
                 logger.FailedToRegisterTask(taskName);
                 return new TaskRegisterResult(
@@ -63,7 +63,7 @@ namespace Cabby.Client.Engine.TaskScheduling
             TaskService.Instance.RootFolder.DeleteTask(taskName, false);
 
             Microsoft.Win32.TaskScheduler.Task nullTask = TaskService.Instance.GetTask(taskName);
-            if (nullTask != null)
+            if (nullTask is not null)
             {
                 logger.FailedToDeleteTask(taskName);
                 return new TaskDeleteResult(
