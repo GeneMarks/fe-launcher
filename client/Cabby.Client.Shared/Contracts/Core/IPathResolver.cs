@@ -1,4 +1,4 @@
-﻿namespace Cabby.Client.Shared.Contracts.IO
+﻿namespace Cabby.Client.Shared.Contracts.Core
 {
 	public interface IPathResolver
 	{

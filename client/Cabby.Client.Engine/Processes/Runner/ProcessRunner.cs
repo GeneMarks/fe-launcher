@@ -1,14 +1,14 @@
-﻿using Cabby.Client.Engine.JobObjects;
+﻿using Cabby.Client.Engine.Processes.JobObjects;
 using Cabby.Client.Engine.Processes.Logging;
+using Cabby.Client.Shared.Contracts.Configuration;
 using Cabby.Client.Shared.Contracts.Sessions;
-using Cabby.Client.Shared.Contracts.Settings;
 using Microsoft.Extensions.Logging;
 
 namespace Cabby.Client.Engine.Processes.Runner
 {
     internal sealed class ProcessRunner(
         ILogger<ProcessRunner> logger,
-        ISessionLoggerScopeProvider sessionLoggerScopeProvider,
+        ITaskScheduler sessionLoggerScopeProvider,
         ProcessFactory factory,
         JobObjectManager jobObjectManager)
     {

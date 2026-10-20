@@ -1,6 +1,6 @@
 ﻿using Cabby.Client.Engine.Sessions.Logging;
+using Cabby.Client.Shared.Contracts.Configuration;
 using Cabby.Client.Shared.Contracts.Sessions;
-using Cabby.Client.Shared.Contracts.Settings;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 

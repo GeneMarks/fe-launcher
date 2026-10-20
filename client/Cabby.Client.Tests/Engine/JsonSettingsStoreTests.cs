@@ -1,4 +1,4 @@
-﻿using Cabby.Client.Engine.IO;
+﻿using Cabby.Client.Engine.Configuration;
 using Cabby.Client.Shared.Contracts.Settings;
 
 namespace Cabby.Client.Tests.Engine

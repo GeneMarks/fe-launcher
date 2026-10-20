@@ -1,5 +1,5 @@
 ﻿using Cabby.Client.Engine.Exceptions;
-using Cabby.Client.Engine.JobObjects.Logging;
+using Cabby.Client.Engine.Processes.Logging;
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32.SafeHandles;
 using System.ComponentModel;
@@ -8,7 +8,7 @@ using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.System.JobObjects;
 
-namespace Cabby.Client.Engine.JobObjects
+namespace Cabby.Client.Engine.Processes.JobObjects
 {
     /// <summary>
     /// Manages the creation, termination, and lifetime of a Win32 job object.

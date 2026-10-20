@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 
-namespace Cabby.Client.Engine.IO.Logging
+namespace Cabby.Client.Engine.Core.Logging
 {
     internal static partial class PathResolverLogging
     {

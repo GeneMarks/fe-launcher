@@ -1,10 +1,10 @@
 ﻿using Cabby.Client.Engine.Exceptions;
-using Cabby.Client.Engine.JobObjects;
 using Cabby.Client.Engine.Processes;
+using Cabby.Client.Engine.Processes.JobObjects;
 using Cabby.Client.Engine.Processes.Runner;
 using Cabby.Client.Engine.Sessions.Logging;
+using Cabby.Client.Shared.Contracts.Configuration;
 using Cabby.Client.Shared.Contracts.Sessions;
-using Cabby.Client.Shared.Contracts.Settings;
 using Cabby.Client.Shared.Contracts.UI;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -13,7 +13,7 @@ namespace Cabby.Client.Engine.Sessions
 {
     internal sealed class SessionOrchestrator(
         ILogger<SessionOrchestrator> logger,
-        ISessionLoggerScopeProvider sessionLoggerScopeProvider,
+        ITaskScheduler sessionLoggerScopeProvider,
         IOptionsMonitor<CabbySettings> settings,
         INotifier notifier,
         JobObjectManager jobObjectManager,

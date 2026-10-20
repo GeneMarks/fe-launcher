@@ -1,8 +1,8 @@
-using Cabby.Client.Engine.IO.Logging;
-using Cabby.Client.Shared.Contracts.IO;
+using Cabby.Client.Engine.Core.Logging;
+using Cabby.Client.Shared.Contracts.Core;
 using Microsoft.Extensions.Logging;
 
-namespace Cabby.Client.Engine.IO
+namespace Cabby.Client.Engine.Core
 {
 	internal sealed class PathResolver(ILogger<PathResolver> logger) : IPathResolver
 	{

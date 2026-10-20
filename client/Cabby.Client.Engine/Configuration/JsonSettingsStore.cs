@@ -1,10 +1,9 @@
 ﻿using Cabby.Client.Shared;
-using Cabby.Client.Shared.Contracts.IO;
-using Cabby.Client.Shared.Contracts.Settings;
+using Cabby.Client.Shared.Contracts.Configuration;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace Cabby.Client.Engine.IO
+namespace Cabby.Client.Engine.Configuration
 {
     public sealed class JsonSettingsStore : ISettingsStore
     {

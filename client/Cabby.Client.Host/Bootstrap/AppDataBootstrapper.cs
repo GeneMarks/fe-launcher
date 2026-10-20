@@ -1,7 +1,7 @@
-using Cabby.Client.Engine.IO;
 using Cabby.Client.Shared;
 using Cabby.Client.Host.Exceptions;
-using Cabby.Client.Shared.Contracts.Settings;
+using Cabby.Client.Shared.Contracts.Configuration;
+using Cabby.Client.Engine.Configuration;
 
 namespace Cabby.Client.Host.Bootstrap
 {

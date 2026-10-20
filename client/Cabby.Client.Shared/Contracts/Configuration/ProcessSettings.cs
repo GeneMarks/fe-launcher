@@ -1,11 +1,10 @@
-namespace Cabby.Client.Shared.Contracts.Settings
+namespace Cabby.Client.Shared.Contracts.Configuration
 {
     public sealed class ProcessSettings
     {
         public string Path { get; set; } = string.Empty;
         public string? Arguments { get; set; }
         public int DelaySeconds { get; set; }
-        public bool NotifyOnExit { get; set; }
         public bool EndSessionOnExit { get; set; }
 
         public ProcessSettings() { }
@@ -15,7 +14,6 @@ namespace Cabby.Client.Shared.Contracts.Settings
             Path = ps.Path;
             Arguments = ps.Arguments;
             DelaySeconds = ps.DelaySeconds;
-            NotifyOnExit = ps.NotifyOnExit;
             EndSessionOnExit = ps.EndSessionOnExit;
         }
     }

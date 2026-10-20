@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Cabby.Client.Engine.Sessions
 {
-    internal sealed class SessionLoggerScopeProvider : ISessionLoggerScopeProvider
+    internal sealed class SessionLoggerScopeProvider : ITaskScheduler
     {
         private readonly Lock _lock = new();
         private string? _currentSessionId;

@@ -1,9 +1,19 @@
 ﻿using Microsoft.Extensions.Logging;
 
-namespace Cabby.Client.Engine.Scheduling.Logging
+namespace Cabby.Client.Engine.TaskScheduling.Logging
 {
     internal static partial class StartupTaskSchedulerLogging
     {
+        [LoggerMessage(
+            Level = LogLevel.Error,
+            Message = "Failed to register task '{TaskName}'.")]
+        public static partial void FailedToRegisterTask(this ILogger logger, string taskName);
+
+        [LoggerMessage(
+            Level = LogLevel.Error,
+            Message = "Failed to delete task '{TaskName}'.")]
+        public static partial void FailedToDeleteTask(this ILogger logger, string taskName);
+
         [LoggerMessage(
             Level = LogLevel.Information,
             Message = "Registering task '{TaskName}' in Task Scheduler.")]
@@ -16,7 +26,7 @@ namespace Cabby.Client.Engine.Scheduling.Logging
         
         [LoggerMessage(
             Level = LogLevel.Debug,
-            Message = "Startup task '{TaskName}' already exists. Skipping registration.")]
-        public static partial void StartupTaskAlreadyExists(this ILogger logger, string taskName);
+            Message = "Task '{TaskName}' already exists. Skipping registration.")]
+        public static partial void TaskAlreadyExists(this ILogger logger, string taskName);
     }
 }

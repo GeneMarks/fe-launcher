@@ -1,6 +1,4 @@
-﻿using Cabby.Client.Shared.Contracts.Settings;
-
-namespace Cabby.Client.Shared.Contracts.IO
+﻿namespace Cabby.Client.Shared.Contracts.Configuration
 {
     public interface ISettingsStore
     {

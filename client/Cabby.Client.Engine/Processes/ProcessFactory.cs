@@ -1,5 +1,5 @@
 ﻿using Cabby.Client.Engine.Processes.Logging;
-using Cabby.Client.Shared.Contracts.IO;
+using Cabby.Client.Shared.Contracts.Core;
 using Microsoft.Extensions.Logging;
 
 namespace Cabby.Client.Engine.Processes

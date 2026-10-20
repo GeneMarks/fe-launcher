@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 
-namespace Cabby.Client.Engine.JobObjects.Logging
+namespace Cabby.Client.Engine.Processes.Logging
 {
     internal static partial class JobObjectManagerLogging
     {

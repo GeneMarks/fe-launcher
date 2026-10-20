@@ -1,4 +1,4 @@
-﻿using Cabby.Client.Shared.Contracts.Settings;
+﻿using Cabby.Client.Shared.Contracts.Configuration;
 
 namespace Cabby.Client.Engine.Processes.Runner
 {

@@ -2,7 +2,7 @@
 
 namespace Cabby.Client.Shared.Contracts.Sessions
 {
-    public interface ISessionLoggerScopeProvider
+    public interface ITaskScheduler
     {
         /// <summary>
         /// Updates the current session id used for subsequently created scopes.
