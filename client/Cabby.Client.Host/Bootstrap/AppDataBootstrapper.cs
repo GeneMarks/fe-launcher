@@ -10,8 +10,6 @@ namespace Cabby.Client.Host.Bootstrap
         public static void EnsureAppDataInitialized()
         {
             EnsurePathExists(AppPaths.AppDataDirectory);
-            EnsurePathExists(AppPaths.HooksDirectory);
-
             EnsureSettingsFileExists();
         }
 
