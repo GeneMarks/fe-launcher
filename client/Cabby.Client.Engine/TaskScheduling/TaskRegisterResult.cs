@@ -1,4 +1,4 @@
-﻿namespace Cabby.Client.Shared.Contracts.TaskScheduling
+﻿namespace Cabby.Client.Engine.TaskScheduling
 {
     public record TaskRegisterResult(
         bool Success,

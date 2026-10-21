@@ -2,7 +2,6 @@
 using Cabby.Client.Host.Bootstrap;
 using Cabby.Client.Host.Exceptions;
 using Cabby.Client.Shared;
-using Cabby.Client.Shared.Contracts.Sessions;
 using Cabby.Client.Shell;
 using Cabby.Client.Shell.TaskDialog;
 using Cabby.Client.Engine;
@@ -131,12 +130,6 @@ class Program
             // Register shutdown message with lifetime service
             IHostApplicationLifetime lifetime = host.Services.GetRequiredService<IHostApplicationLifetime>();
             lifetime.ApplicationStopping.Register(() => Log.Information("Shutting down Cabby Client..."));
-
-            using (IServiceScope scope = host.Services.CreateScope())
-            {
-                var startupSessionInitializer = scope.ServiceProvider.GetRequiredService<IStartupSessionInitializer>();
-                startupSessionInitializer.LaunchStartupSessionIfEnabled();
-            }
 
             host.Run();
             return 0;

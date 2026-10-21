@@ -1,4 +1,4 @@
-﻿namespace Cabby.Client.Shared.Contracts.Sessions
+﻿namespace Cabby.Client.Engine.Sessions
 {
     public enum SessionStatus
     {

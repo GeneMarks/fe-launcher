@@ -3,24 +3,17 @@ using Cabby.Client.Engine.Processes;
 using Cabby.Client.Engine.Processes.JobObjects;
 using Cabby.Client.Engine.Processes.Runner;
 using Cabby.Client.Engine.Sessions.Logging;
-using Cabby.Client.Shared.Contracts.Configuration;
-using Cabby.Client.Shared.Contracts.Sessions;
-using Cabby.Client.Shared.Contracts.UI;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 namespace Cabby.Client.Engine.Sessions
 {
     internal sealed class SessionOrchestrator(
         ILogger<SessionOrchestrator> logger,
-        ITaskScheduler sessionLoggerScopeProvider,
-        IOptionsMonitor<CabbySettings> settings,
-        INotifier notifier,
+        SessionLoggerScopeProvider sessionLoggerScopeProvider,
         JobObjectManager jobObjectManager,
-        ProcessRunner processRunner) : ISessionOrchestrator
+        ProcessRunner processRunner)
     {
         private Session? _session;
-        private CabbySettings? _sessionSettings;
         private CancellationTokenSource? _sessionCts;
         private readonly Lock _sessionLock = new();
 

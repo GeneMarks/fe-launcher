@@ -1,9 +1,8 @@
-﻿using Cabby.Client.Shared.Contracts.Sessions;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 
 namespace Cabby.Client.Engine.Sessions
 {
-    internal sealed class SessionLoggerScopeProvider : ITaskScheduler
+    internal sealed class SessionLoggerScopeProvider
     {
         private readonly Lock _lock = new();
         private string? _currentSessionId;

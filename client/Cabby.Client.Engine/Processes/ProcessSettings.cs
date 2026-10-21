@@ -1,6 +1,6 @@
-namespace Cabby.Client.Shared.Contracts.Configuration
+namespace Cabby.Client.Engine.Processes
 {
-    public sealed class ProcessSettings
+    internal sealed class ProcessSettings
     {
         public string Path { get; set; } = string.Empty;
         public string? Arguments { get; set; }

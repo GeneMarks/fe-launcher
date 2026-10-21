@@ -1,11 +1,10 @@
 ﻿using Cabby.Client.Engine.TaskScheduling.Logging;
-using Cabby.Client.Shared.Contracts.TaskScheduling;
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32.TaskScheduler;
 
 namespace Cabby.Client.Engine.TaskScheduling
 {
-    internal sealed class StartupTaskScheduler(ILogger<StartupTaskScheduler> logger) : IStartupTaskScheduler
+    internal sealed class StartupTaskScheduler(ILogger<StartupTaskScheduler> logger)
     {
         private const string DefaultTaskName = "CabbyStartupTask";
 
