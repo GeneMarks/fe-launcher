@@ -28,7 +28,7 @@ namespace Cabby.Client.Engine.Core
 			return resolvedPath;
 		}
 
-		public static bool IsAbsolute(string path)
+		public bool IsAbsolute(string path)
 			=> Path.IsPathFullyQualified(path);
 	}
 }

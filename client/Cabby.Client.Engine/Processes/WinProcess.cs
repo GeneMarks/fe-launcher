@@ -1,5 +1,6 @@
 ﻿using Cabby.Client.Engine.Exceptions;
 using Cabby.Client.Engine.Processes.Logging;
+using Cabby.Client.Shared.Contracts.Processes;
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32.SafeHandles;
 using System.ComponentModel;
@@ -10,33 +11,24 @@ using Windows.Win32.System.Threading;
 
 namespace Cabby.Client.Engine.Processes
 {
-    internal sealed class Process : IDisposable
+    internal sealed class WinProcess : IDisposable
     {
-        public event EventHandler<ProcessExitedEventArgs>? Exited;
-
-        private readonly ILogger<Process> _logger;
-
-        private readonly string? _workingDir;
         private uint _pid;
         private SafeFileHandle? _safeProcHandle;
         private WaitHandle? _waitHandle;
         private RegisteredWaitHandle? _registeredWaitHandle;
         private readonly WaitOrTimerCallback _waitCallback;
 
-        public string PathWithArgs { get; }
-        public string PrettyName { get; }
+        public required ILogger<WinProcess> Logger { private get; init; }
+        public required ProcessDto ProcessDto { get; init; }
+        public string? WorkingDir { private get; init; }
+        public required string PathWithArgs { get; init; }
+        public required string PrettyName { get; init; }
 
-        public Process(
-            ILogger<Process> logger,
-            string pathWithArgs,
-            string? workingDir,
-            string prettyName)
+        public required Action<ProcessCompletionContext> ProcessCompletionCallback { private get; init; }
+
+        public WinProcess()
         {
-            _logger = logger;
-            PathWithArgs = pathWithArgs;
-            _workingDir = workingDir;
-            PrettyName = prettyName;
-
             _waitCallback = WaitCallback;
         }
 
@@ -64,7 +56,7 @@ namespace Cabby.Client.Engine.Processes
                     var errorCode = Marshal.GetLastPInvokeError();
                     var win32Ex = new Win32Exception(errorCode);
 
-                    _logger.FailedToInitializeAttributeList(PathWithArgs, errorCode, win32Ex);
+                    Logger.FailedToInitializeAttributeList(PathWithArgs, errorCode, win32Ex);
                     throw new ProcessException($"Failed to initialize process attribute list for process with path '{PathWithArgs}'.", win32Ex);
                 }
 
@@ -76,7 +68,7 @@ namespace Cabby.Client.Engine.Processes
                     var errorCode = Marshal.GetLastPInvokeError();
                     var win32Ex = new Win32Exception(errorCode);
 
-                    _logger.FailedToUpdateAttributeList(PathWithArgs, errorCode, win32Ex);
+                    Logger.FailedToUpdateAttributeList(PathWithArgs, errorCode, win32Ex);
                     throw new ProcessException($"Failed to update process attribute list for process with path '{PathWithArgs}'.", win32Ex);
                 }
 
@@ -93,19 +85,19 @@ namespace Cabby.Client.Engine.Processes
                 if (!PInvoke.CreateProcess(
                     null, ref lpCommandLine, null, null, false,
                     PROCESS_CREATION_FLAGS.EXTENDED_STARTUPINFO_PRESENT,
-                    null, _workingDir, in siex.StartupInfo, out pi))
+                    null, WorkingDir, in siex.StartupInfo, out pi))
                 {
                     var errorCode = Marshal.GetLastPInvokeError();
                     var win32Ex = new Win32Exception(errorCode);
 
-                    _logger.FailedToCreateProcess(PathWithArgs, errorCode, win32Ex);
+                    Logger.FailedToCreateProcess(PathWithArgs, errorCode, win32Ex);
                     throw new ProcessException($"Failed to create process with path '{PathWithArgs}'.", win32Ex);
                 }
 
                 _safeProcHandle = new SafeFileHandle(pi.hProcess, true);
                 _pid = PInvoke.GetProcessId(_safeProcHandle);
                 
-                _ = PInvoke.CloseHandle(pi.hThread); // Not using this; Handle must be closed.
+                _ = PInvoke.CloseHandle(pi.hThread); // Not using this. Handle must be closed.
 
                 RegisterWaitHandle();
             }
@@ -132,16 +124,19 @@ namespace Cabby.Client.Engine.Processes
             uint exitCode;
             if (!PInvoke.GetExitCodeProcess(_safeProcHandle, out exitCode))
             {
-                exitCode = 0; // todo: handle function failure differently
+                exitCode = 0; // TODO: Handle function failure differently?
             }
 
-            Exited?.Invoke(this, new ProcessExitedEventArgs()
+            Logger.ProcessExited(_pid, PathWithArgs, PrettyName, exitCode);
+
+            var completionContext = new ProcessCompletionContext
             {
-                ProcessId           = _pid,
-                ProcessPathWithArgs = PathWithArgs,
-                ProcessName         = PrettyName,
-                ExitCode            = exitCode
-            });
+                ProcessDto = ProcessDto,
+                WasSuccessful = exitCode == 0,
+                FailureMessage = exitCode == 0 ? null : $"Process '{PrettyName}' exited unexpectedly with exit code: {exitCode}."
+            };
+
+            ProcessCompletionCallback(completionContext);
         }
 
         public void Dispose()

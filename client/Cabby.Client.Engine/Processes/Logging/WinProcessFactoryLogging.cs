@@ -2,7 +2,7 @@
 
 namespace Cabby.Client.Engine.Processes.Logging
 {
-    internal static partial class ProcessFactoryLogging
+    internal static partial class WinProcessFactoryLogging
     {
         [LoggerMessage(
             Level = LogLevel.Error,

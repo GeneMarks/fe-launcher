@@ -2,6 +2,7 @@
 
 namespace Cabby.Client.Engine.Sessions
 {
+    // TODO: HUH??
     internal sealed class SessionLoggerScopeProvider
     {
         private readonly Lock _lock = new();

@@ -30,41 +30,30 @@ model Session {
 }
 
 model Process {
-  id            String          @id @default(uuid())
-  sessionId     String
-  session       Session         @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  phase         ProcessPhase
-  type          ProcessType     @default(EXECUTABLE)
-  target        String?         // Executable path
-  arguments     String?         // Optional CLI arguments for executable
-  scriptContent String?         // Lua script code
-  delayMs       Int             @default(0)
-  repeatCount   Int             @default(1)
-  order         Int
-  status        ProcessStatus   @default(PENDING)
-  exitCode      Int?
-  subProcesses  SubProcessLog[] // Child processes spawned by this process
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
+  id                   String              @id @default(uuid())
+  sessionId            String
+  session              Session             @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  phase                ProcessPhase
+  type                 ProcessType         @default(EXECUTABLE)
+  target               String?             // Executable path
+  arguments            String?             // Optional CLI arguments for executable
+  scriptContent        String?             // Lua script code
+  delayMs              Int                 @default(0)
+  order                Int
+  status               ProcessStatus       @default(PENDING)
+  exitCode             Int?
+  exitBehavior         ProcessExitBehavior @default(NONE)
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
 
   @@index([sessionId, order])
-}
-
-model SubProcessLog {
-  id          String  @id @default(uuid())
-  processId   String
-  process     Process @relation(fields: [processId], references: [id], onDelete: Cascade)
-  processName String  // Name from Windows
-  winPid      Int     // PID from Windows
-
-  @@index([processId])
 }
 
 enum SessionStatus {
   PENDING
   STARTED
   RUNNING_PRE_PROCESSES
-  RUNNING_MAIN_PROCESS
+  RUNNING_FRONTEND
   RUNNING_POST_PROCESSES
   COMPLETED
   ABORTED
@@ -87,4 +76,11 @@ enum ProcessStatus {
   RUNNING
   COMPLETED
   FAILED
+}
+
+enum ProcessExitBehavior {
+  NONE,
+  END_SESSION,
+  RESTART_SESSION,
+  RESTART_SELF
 }

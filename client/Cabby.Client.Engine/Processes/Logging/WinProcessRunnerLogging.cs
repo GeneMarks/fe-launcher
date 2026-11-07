@@ -2,7 +2,7 @@
 
 namespace Cabby.Client.Engine.Processes.Logging
 {
-    internal static partial class ProcessRunnerLogging
+    internal static partial class WinProcessRunnerLogging
     {
         [LoggerMessage(
             Level = LogLevel.Information,

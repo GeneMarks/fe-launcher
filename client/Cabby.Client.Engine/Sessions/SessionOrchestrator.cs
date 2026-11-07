@@ -1,167 +1,121 @@
 ﻿using Cabby.Client.Engine.Exceptions;
 using Cabby.Client.Engine.Processes;
-using Cabby.Client.Engine.Processes.JobObjects;
-using Cabby.Client.Engine.Processes.Runner;
 using Cabby.Client.Engine.Sessions.Logging;
+using Cabby.Client.Shared.Contracts.Processes;
+using Cabby.Client.Shared.Contracts.Sessions;
 using Microsoft.Extensions.Logging;
 
 namespace Cabby.Client.Engine.Sessions
 {
     internal sealed class SessionOrchestrator(
         ILogger<SessionOrchestrator> logger,
+        SessionStatusProvider sessionStatusProvider,
+        SessionStatusUpdater sessionStatusUpdater,
         SessionLoggerScopeProvider sessionLoggerScopeProvider,
         JobObjectManager jobObjectManager,
-        ProcessRunner processRunner)
+        ProcessDispatcher processDispatcher)
     {
-        private Session? _session;
+        private SessionDto? _currentSession;
         private CancellationTokenSource? _sessionCts;
-        private readonly Lock _sessionLock = new();
 
-        public SessionStateSnapshot GetSessionState()
+        public async Task StartNewSessionAsync(SessionDto sessionDto)
         {
-            Session? s;
-            lock (_sessionLock) s = _session;
-
-            return new SessionStateSnapshot(
-                Id: s?.Id,
-                Status: s?.Status ?? SessionStatus.Completed,
-                IsActive: s?.IsActive ?? false,
-                CanRequestStop: s?.CanRequestStop ?? false);
-        }
-
-        public async Task StartNewSessionAsync()
-        {
-            CancellationToken ct;
-
-            lock (_sessionLock)
+            if (!sessionStatusProvider.IsIdle)
             {
-                if (_session?.IsActive == true)
-                {
-                    logger.CannotStartMultipleSessions();
-                    return;
-                }
-
-                _session = new()
-                {
-                    Status = SessionStatus.Starting
-                };
-
-                _sessionCts = new CancellationTokenSource();
-                ct = _sessionCts.Token;
-
-                logger.StartingNewSession(_session.Id);
+                logger.CannotStartMultipleSessions();
+                // TODO: Notify server
+                return;
             }
 
-            sessionLoggerScopeProvider.SetCurrentSessionId(_session.Id);
+            _currentSession = sessionDto;
+            logger.StartingNewSession(_currentSession.Id);
+            sessionStatusUpdater.UpdateSession(_currentSession);
+            sessionStatusUpdater.UpdateStatus(SessionStatus.Pending);
+
+            _sessionCts = new CancellationTokenSource();
+            var sessionCt = _sessionCts.Token;
+
+            sessionLoggerScopeProvider.SetCurrentSessionId(_currentSession.Id);
             using var sessionScope = sessionLoggerScopeProvider.BeginSessionScope(logger);
 
             try
             {
-                _sessionSettings = settings.CurrentValue;
-
-                ProcessRun? preProcessRun;
-                ProcessRun? frontendRun;
-                List<string> processRunBuildErrors = [];
-
-                if (!processRunner.TryBuildProcessRun(
-                    _sessionSettings.PreProcesses, 
-                    out preProcessRun,
-                    out var preProcessBuildFailures, ct))
-                {
-                    foreach (var fail in preProcessBuildFailures)
-                    {
-                        processRunBuildErrors.Add(GetProcessRunBuildFailMessage(fail));
-                    }
-                }
-
-                if (!processRunner.TryBuildProcessRun(
-                    _sessionSettings.Frontend,
-                    out frontendRun,
-                    out var frontendBuildFailure, ct))
-                {
-                    processRunBuildErrors.Add(GetProcessRunBuildFailMessage(frontendBuildFailure!));
-                }
-
-                if (processRunBuildErrors.Count > 0)
-                {
-                    foreach (var error in processRunBuildErrors)
-                    {
-                        notifier.Notify("Process Configuration Error", error);
-                    }
-
-                    lock (_sessionLock) _session.Status = SessionStatus.Failed;
-                    return;
-                }
-
                 jobObjectManager.ResetJobObject();
-                processRunner.RunnerProcessExited += OnRunnerProcessExited;
 
-                /* Pre-hooks */
-                // session.Status = SessionStatus.RunningPreHooks;
+                /* Pre-Processes */
+                sessionStatusUpdater.UpdateStatus(SessionStatus.RunningPreProcesses);
+                logger.RunningPreProcesses(_currentSession.PreProcesses.Length);
 
-                lock (_sessionLock) _session.Status = SessionStatus.RunningPreProcesses;
+                foreach (var preProcess in _currentSession.PreProcesses)
+                {
+                    await processDispatcher.DispatchAsync(preProcess, OnProcessExited, sessionCt);
+                }
 
-                logger.RunningPreProcesses(_sessionSettings.PreProcesses.Count);
-                await processRunner.RunAsync(preProcessRun!, ct);
-
-                lock (_sessionLock) _session.Status = SessionStatus.RunningFrontend;
-
+                /* Frontend */
+                sessionStatusUpdater.UpdateStatus(SessionStatus.RunningFrontend);
                 logger.StartingFrontend();
-                await processRunner.RunAsync(frontendRun!, ct);
+
+                await processDispatcher.DispatchAsync(_currentSession.MainProcess, OnProcessExited, sessionCt);
 
                 logger.WaitingForSessionCompletion();
-                await jobObjectManager.WaitForJobObjectCompletionAsync(ct);
+                await jobObjectManager.WaitForJobObjectCompletionAsync(sessionCt);
 
-                // This is going to have to run no matter what..
-                /* Post-hooks */
-                // session.Status = SessionStatus.RunningPostHooks;
+                /* Post-Processes */
+                sessionStatusUpdater.UpdateStatus(SessionStatus.RunningPostProcesses);
+                logger.RunningPostProcesses(_currentSession.PostProcesses.Length);
 
-                lock (_sessionLock) _session.Status = SessionStatus.Completed;
+                foreach (var postProcess in _currentSession.PostProcesses)
+                {
+                    await processDispatcher.DispatchAsync(postProcess, OnProcessExited, sessionCt);
+                }
+
+                // TODO: Await the job object completion again for post-processes?
+
+                /* Completion */
+                sessionStatusUpdater.UpdateStatus(SessionStatus.Completed);
             }
-            catch (OperationCanceledException) when (ct.IsCancellationRequested)
+            catch (OperationCanceledException) when (sessionCt.IsCancellationRequested)
             {
                 logger.StoppingSession();
                 await StopSessionAsync(SessionStatus.Aborted);
             }
-            catch (Exception ex) when (
-                ex is JobObjectException
-                || ex is ProcessException)
+            catch (WinApiException ex)
             {
                 logger.FatalSessionError(ex.GetType().Name);
-                notifier.Notify("Unexpected Error", "Ending the current session. Please see log for more details.");
+                // notifier.Notify("Unexpected Error", "Ending the current session. Please see log for more details.");
+                // TODO: Notify server
                 await StopSessionAsync(SessionStatus.Failed);
             }
             catch (Exception ex)
             {
                 logger.UnknownFatalSessionError(ex);
-                notifier.Notify("Unexpected Error", "Ending the current session. Please see log for more details.");
+                // notifier.Notify("Unexpected Error", "Ending the current session. Please see log for more details.");
+                // TODO: Notify server
+
                 await StopSessionAsync(SessionStatus.Failed);
             }
             finally
             {
-                processRunner.RunnerProcessExited -= OnRunnerProcessExited;
-                processRunner.Reset();
+                var runtime = sessionStatusProvider.ElapsedTime;
+                var prettyRuntime = $"{(int)runtime.TotalHours} hrs {runtime.Minutes:00} min {runtime.Seconds:00} sec";
+                // TODO: Don't get status from the SessionDto?
+                logger.SessionFinalRuntime(_currentSession.Id, _currentSession.Status, prettyRuntime);
 
-                lock (_sessionLock)
-                {
-                    logger.SessionFinalRuntime(_session.Id, _session.Status, _session.PrettyRuntime);
+                // TODO: Notify server
 
-                    _sessionCts.Dispose();
-                    _sessionCts = null;
-                    _sessionSettings = null;
-                }
-
-                sessionLoggerScopeProvider.SetCurrentSessionId(null);
+                sessionStatusUpdater.ResetState();
+                _sessionCts?.Dispose();
+                _sessionCts = null;
+                _currentSession = null;
             }
         }
 
         public void RequestCancelSession()
         {
-            CancellationTokenSource? cts;
+            CancellationTokenSource? cts = null;
 
-            lock (_sessionLock)
+            if (sessionStatusProvider.IsActive)
             {
-                if (_session?.CanRequestStop != true) return;
                 cts = _sessionCts;
             }
 
@@ -170,94 +124,56 @@ namespace Cabby.Client.Engine.Sessions
 
         private async Task StopSessionAsync(SessionStatus intendedCompletionStatus)
         {
-            const int timeoutCtsSeconds = 10;
+            sessionStatusUpdater.UpdateStatus(SessionStatus.Stopping);
 
-            lock (_sessionLock)
-            {
-                if (_session is null)
-                {
-                    logger.TriedToStopNullSession();
-                    return;
-                }
-
-                _session.Status = SessionStatus.Stopping;
-            }
-
+            // First attempt to close windows in the job object gracefully
             logger.AttemptingToCloseProcessWindows();
-            await jobObjectManager.AttemptCloseWindowsInJobAsync(
-                _sessionSettings?.EndSessionGracePeriod ?? 0);
+            await jobObjectManager.AttemptCloseWindowsInJobAsync(_currentSession!.GracefulCloseWindowsTimeoutMs);
 
             var completionStatus = intendedCompletionStatus;
-
+            // Then always terminate the job object to ensure all processes are cleaned up
             try
             {
                 logger.TerminatingProcesses();
                 jobObjectManager.TerminateJobObject();
 
-                // Accept the job object as complete no matter what after x seconds to avoid hangs
-                using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutCtsSeconds));
+                // Accept the job object as complete after 10 seconds to avoid hangs
+                // TODO: Make this configurable?
+                using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
                 await jobObjectManager.WaitForJobObjectCompletionAsync(timeoutCts.Token);
             }
-            catch (JobObjectException ex)
+            catch (WinApiException ex)
             {
-                logger.AbandoningSessionDueToJobObjectError(ex);
+                logger.AbandoningSessionDueToWinError(ex);
                 completionStatus = SessionStatus.Failed;
             }
             finally
             {
-                var isCompletionStatus = completionStatus is (
-                      SessionStatus.Completed
-                   or SessionStatus.Failed
-                   or SessionStatus.Aborted);
-
-                lock (_sessionLock) _session.Status = isCompletionStatus
-                        ? completionStatus
-                        : SessionStatus.Completed;
+                sessionStatusUpdater.UpdateStatus(completionStatus);
             }
         }
 
-        private void OnRunnerProcessExited(object? _, RunnerProcessExitedEventArgs e)
+        private void OnProcessExited(ProcessCompletionContext context)
         {
-            var endSessionOnExit = e.EndSessionOnExit;
-            var processName = e.ProcessName;
-
-            lock (_sessionLock)
+            switch (context.ProcessDto.ExitBehavior)
             {
-                // Don't do anything when not in a cancelable active session
-                if (_session?.CanRequestStop != true
-                    || _sessionCts?.Token.IsCancellationRequested == true) return;
+                case ProcessExitBehavior.None:
+                    break;
 
-                if (endSessionOnExit)
-                {
+                case ProcessExitBehavior.EndSession:
                     _sessionCts!.Cancel();
-                }
+                    break;
+
+                case ProcessExitBehavior.RestartSession:
+                    // Don't do anything when not in a cancelable active session
+                    if (!sessionStatusProvider.IsActive || _sessionCts?.Token.IsCancellationRequested == true) return;
+                    // TODO
+                    break;
+
+                case ProcessExitBehavior.RestartSelf:
+                    // TODO
+                    break;
             }
-
-            var toastMessage = endSessionOnExit
-                ? $"'{processName}' has terminated.\nEnding the current session."
-                : $"'{processName}' has terminated.";
-
-            if (e.NotifyOnExit)
-            {
-                notifier.Notify("Process Exited", toastMessage);
-            }
-        }
-
-        private static string GetProcessRunBuildFailMessage(ProcessCreationFailure failure)
-        {
-            return failure.Reason switch
-            {
-                ProcessCreationFailureReason.EmptyPath
-                    => $"A provided executable path is empty.\nPlease verify settings.",
-
-                ProcessCreationFailureReason.InvalidFileExt
-                    => $"'{failure.FileName}' is not a valid executable file.\nPlease verify settings.",
-
-                ProcessCreationFailureReason.FileNotPresent
-                    => $"'{failure.FileName}' does not exist.\nPlease verify settings.",
-
-                _ => String.Empty,
-            };
         }
     }
 }

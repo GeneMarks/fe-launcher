@@ -8,6 +8,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Cabby.Client.Shared.Contracts.Configuration;
 using Cabby.Client.Engine.Processes.JobObjects;
+using Cabby.Client.Shared.Contracts.Sessions;
+using Cabby.Client.Shared.Contracts.Core;
 
 namespace Cabby.Client.Engine
 {
@@ -15,17 +17,21 @@ namespace Cabby.Client.Engine
     {
         public static IServiceCollection AddEngineServices(this IServiceCollection services)
         {
-            // Public services
-            services.AddSingleton<PathResolver>();
-            services.AddSingleton<SessionOrchestrator>();
-            services.AddSingleton<ISettingsStore, JsonSettingsStore>();
-
             // Internal services
+            services.AddSingleton<SessionOrchestrator>();
+            services.AddSingleton<SessionStatusProvider>();
+            services.AddSingleton<SessionLoggerScopeProvider>();
+
             services.AddSingleton<ProcessFactory>();
             services.AddSingleton<ProcessRunner>();
             services.AddSingleton<JobObjectManager>();
-            services.AddSingleton<SessionLoggerScopeProvider>();
+
             services.AddSingleton<StartupTaskScheduler>();
+
+            // Public services
+            services.AddSingleton<IPathResolver, PathResolver>();
+            services.AddSingleton<ISettingsStore, JsonSettingsStore>();
+            services.AddSingleton<ISessionStatusProvider>(sp => sp.GetRequiredService<SessionStatusProvider>());
 
             return services;
         }

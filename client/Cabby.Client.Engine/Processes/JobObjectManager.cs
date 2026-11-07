@@ -8,7 +8,7 @@ using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.System.JobObjects;
 
-namespace Cabby.Client.Engine.Processes.JobObjects
+namespace Cabby.Client.Engine.Processes
 {
     /// <summary>
     /// Manages the creation, termination, and lifetime of a Win32 job object.
@@ -82,7 +82,7 @@ namespace Cabby.Client.Engine.Processes.JobObjects
         /// <summary>
         /// Posts WM_CLOSE to all top-level windows belonging to processes in the job.
         /// </summary>
-        /// <param name="gracePeriod">Time, in seconds, to wait after posting to all windows.</param>
+        /// <param name="gracePeriod">Time, in milliseconds, to wait after posting to all windows.</param>
         public async Task AttemptCloseWindowsInJobAsync(int gracePeriod = 0)
         {
             if (_safeJobHandle is null || _safeJobHandle.IsInvalid)
@@ -125,7 +125,7 @@ namespace Cabby.Client.Engine.Processes.JobObjects
             },
             (LPARAM)0);
 
-            var waitTime = TimeSpan.FromSeconds(gracePeriod);
+            var waitTime = TimeSpan.FromMilliseconds(gracePeriod);
             if (waitTime > TimeSpan.Zero)
             {
                 logger.WaitingGracePeriod(gracePeriod);
