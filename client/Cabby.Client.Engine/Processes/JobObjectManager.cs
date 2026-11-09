@@ -24,7 +24,7 @@ namespace Cabby.Client.Engine.Processes
         /// <remarks>
         /// The job object must be initialized (via <see cref="ResetJobObject"/>) before accessing this property.
         /// </remarks>
-        /// <exception cref="JobObjectException">
+        /// <exception cref="WinApiException">
         /// Thrown when the job object has not been initialized or the underlying handle is invalid.
         /// </exception>
         public SafeFileHandle SafeJobHandle
@@ -34,7 +34,7 @@ namespace Cabby.Client.Engine.Processes
                 if (_safeJobHandle is null || _safeJobHandle.IsInvalid)
                 {
                     logger.TriedToAccessNullOrInvalidJobHandle();
-                    throw new JobObjectException("Tried to access null or invalid job handle.");
+                    throw new WinApiException("Tried to access null or invalid job handle.");
                 }
 
                 return _safeJobHandle;
@@ -44,7 +44,7 @@ namespace Cabby.Client.Engine.Processes
         /// <summary>
         /// Closes and releases the manager's existing job object and assigns a new one.
         /// </summary>
-        /// <exception cref="JobObjectException">Thrown when job object creation fails due to a Win32 error.</exception>
+        /// <exception cref="WinApiException">Thrown when job object creation fails due to a Win32 error.</exception>
         public void ResetJobObject()
         {
             ReleaseJobObject();
@@ -60,7 +60,7 @@ namespace Cabby.Client.Engine.Processes
         /// <returns>
         /// A task that completes when there are no more active processes in the current job object.
         /// </returns>
-        /// <exception cref="JobObjectException">
+        /// <exception cref="WinApiException">
         /// Thrown when the job object has not been initialized, the handle is invalid, or completion-port setup fails due to a Win32 error.
         /// </exception>
         /// <exception cref="OperationCanceledException">
@@ -71,7 +71,7 @@ namespace Cabby.Client.Engine.Processes
             if (_safeJobHandle is null || _safeJobHandle.IsInvalid)
             {
                 logger.TriedToWaitNullOrInvalidJobHandle();
-                throw new JobObjectException("Tried to wait for completion of null or invalid job handle.");
+                throw new WinApiException("Tried to wait for completion of null or invalid job handle.");
             }
 
             EnsureIOCompletionPortSetup();
@@ -136,7 +136,7 @@ namespace Cabby.Client.Engine.Processes
         /// <summary>
         /// Terminates the current job object if it is valid.
         /// </summary>
-        /// <exception cref="JobObjectException">Thrown when job object termination fails due to a Win32Error.</exception>
+        /// <exception cref="WinApiException">Thrown when job object termination fails due to a Win32Error.</exception>
         public void TerminateJobObject()
         {
             if (_safeJobHandle is null || _safeJobHandle.IsInvalid)
@@ -151,7 +151,7 @@ namespace Cabby.Client.Engine.Processes
                 var win32Ex = new Win32Exception(errorCode);
 
                 logger.FailedToTerminateJobObject(errorCode, win32Ex);
-                throw new JobObjectException($"Failed to terminate job object.", win32Ex);
+                throw new WinApiException($"Failed to terminate job object.", win32Ex);
             }
         }
             
@@ -165,7 +165,7 @@ namespace Cabby.Client.Engine.Processes
                 var win32Ex = new Win32Exception(errorCode);
 
                 logger.FailedToCreateJobObject(errorCode, win32Ex);
-                throw new JobObjectException("Failed to create job object.", win32Ex);
+                throw new WinApiException("Failed to create job object.", win32Ex);
             }
 
             return safeJobHandle;
@@ -185,7 +185,7 @@ namespace Cabby.Client.Engine.Processes
                 var win32Ex = new Win32Exception(errorCode);
 
                 logger.FailedToCreateIoCompletionPort(errorCode, win32Ex);
-                throw new JobObjectException("Failed to create IO completion port.", win32Ex);
+                throw new WinApiException("Failed to create IO completion port.", win32Ex);
             }
 
             var jobHandle = _safeJobHandle!.DangerousGetHandle();
@@ -204,7 +204,7 @@ namespace Cabby.Client.Engine.Processes
                 var win32Ex = new Win32Exception(errorCode);
 
                 logger.FailedToSetJobObjectLimits(errorCode, win32Ex);
-                throw new JobObjectException("Failed to set job object limits.", win32Ex);
+                throw new WinApiException("Failed to set job object limits.", win32Ex);
             }
         }
 

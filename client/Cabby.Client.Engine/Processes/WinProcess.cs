@@ -36,7 +36,7 @@ namespace Cabby.Client.Engine.Processes
         /// Creates a native Windows process in the provided job handle and registers a wait callback.
         /// </summary>
         /// <param name="safeJobHandle">Handle to a job object the process will be assigned to.</param>
-        /// <exception cref="ProcessException">
+        /// <exception cref="WinApiException">
         /// Thrown when process creation fails due to a Win32 error.
         /// </exception>
         public unsafe void StartInJob(SafeFileHandle safeJobHandle)
@@ -57,7 +57,7 @@ namespace Cabby.Client.Engine.Processes
                     var win32Ex = new Win32Exception(errorCode);
 
                     Logger.FailedToInitializeAttributeList(PathWithArgs, errorCode, win32Ex);
-                    throw new ProcessException($"Failed to initialize process attribute list for process with path '{PathWithArgs}'.", win32Ex);
+                    throw new WinApiException($"Failed to initialize process attribute list for process with path '{PathWithArgs}'.", win32Ex);
                 }
 
                 HANDLE jobHandle = (HANDLE)safeJobHandle.DangerousGetHandle();
@@ -69,7 +69,7 @@ namespace Cabby.Client.Engine.Processes
                     var win32Ex = new Win32Exception(errorCode);
 
                     Logger.FailedToUpdateAttributeList(PathWithArgs, errorCode, win32Ex);
-                    throw new ProcessException($"Failed to update process attribute list for process with path '{PathWithArgs}'.", win32Ex);
+                    throw new WinApiException($"Failed to update process attribute list for process with path '{PathWithArgs}'.", win32Ex);
                 }
 
                 STARTUPINFOEXW siex = new()
@@ -91,7 +91,7 @@ namespace Cabby.Client.Engine.Processes
                     var win32Ex = new Win32Exception(errorCode);
 
                     Logger.FailedToCreateProcess(PathWithArgs, errorCode, win32Ex);
-                    throw new ProcessException($"Failed to create process with path '{PathWithArgs}'.", win32Ex);
+                    throw new WinApiException($"Failed to create process with path '{PathWithArgs}'.", win32Ex);
                 }
 
                 _safeProcHandle = new SafeFileHandle(pi.hProcess, true);
