@@ -13,7 +13,7 @@ namespace Cabby.Client.Engine.Core
 			if (string.IsNullOrEmpty(path))
 			{
 				logger.PathNullOrEmpty();
-				return String.Empty;
+				return string.Empty;
 			}
 
 			if (IsAbsolute(path))
