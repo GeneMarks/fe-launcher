@@ -30,7 +30,7 @@ namespace Cabby.Client.Engine.Sessions
         {
             get
             {
-                lock (_lock) return _currentStatus is SessionStatus.Idle;
+                lock (_lock) { return IsIdleUnsafe(_currentStatus); }
             }
         }
 
@@ -38,16 +38,15 @@ namespace Cabby.Client.Engine.Sessions
         {
             get
             {
-                lock (_lock)
-                {
-                    return _currentStatus is not (
-                        SessionStatus.Idle or
-                        SessionStatus.Pending or
-                        SessionStatus.Stopping or
-                        SessionStatus.Completed or
-                        SessionStatus.Aborted or
-                        SessionStatus.Failed);
-                }
+                lock (_lock) { return IsActiveUnsafe(_currentStatus); }
+            }
+        }
+
+        public bool IsCancellable
+        {
+            get
+            {
+                lock (_lock) { return IsCancellableUnsafe(_currentStatus); }
             }
         }
 
@@ -55,17 +54,50 @@ namespace Cabby.Client.Engine.Sessions
         {
             get
             {
-                lock (_lock)
-                {
-                    if (!_startedAt.HasValue)
-                    {
-                        return TimeSpan.Zero;
-                    }
-
-                    var endTime = _finishedAt ?? DateTime.UtcNow;
-                    return endTime - _startedAt.Value;
-                }
+                lock (_lock) { return CalculateElapsedTimeUnsafe(_startedAt, _finishedAt); }
             }
+        }
+
+        public SessionStatusSnapshot GetSnapshot()
+        {
+            lock (_lock)
+            {
+                return new()
+                {
+                    CurrentStatus = _currentStatus,
+                    CurrentSession = _currentSession,
+                    IsIdle = IsIdleUnsafe(_currentStatus),
+                    IsActive = IsActiveUnsafe(_currentStatus),
+                    IsCancellable = IsCancellableUnsafe(_currentStatus),
+                    ElapsedTime = CalculateElapsedTimeUnsafe(_startedAt, _finishedAt)
+                };
+            }
+        }
+
+        private static bool IsIdleUnsafe(SessionStatus status)
+            => status is SessionStatus.Idle;
+
+        private static bool IsActiveUnsafe(SessionStatus status)
+            => status is not (
+                SessionStatus.Idle or
+                SessionStatus.Pending or
+                SessionStatus.Stopping or
+                SessionStatus.Completed or
+                SessionStatus.Aborted or
+                SessionStatus.Failed);
+
+        private static bool IsCancellableUnsafe(SessionStatus status)
+            => IsActiveUnsafe(status) && status is not SessionStatus.RunningPostProcesses;
+
+        private static TimeSpan CalculateElapsedTimeUnsafe(DateTime? startedAt, DateTime? finishedAt)
+        {
+            if (!startedAt.HasValue)
+            {
+                return TimeSpan.Zero;
+            }
+
+            var endTime = finishedAt ?? DateTime.UtcNow;
+            return endTime - startedAt.Value;
         }
 
         internal void ResetState()
