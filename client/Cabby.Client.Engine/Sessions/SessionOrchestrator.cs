@@ -153,7 +153,6 @@ namespace Cabby.Client.Engine.Sessions
             {
                 logger.AbandoningSessionDueToWinError(ex);
                 completionStatus = SessionStatus.Failed;
-                await serverMessageDispatcher.SendAsync(WebSocketMessageTypes.Outbound.SessionFailed);
             }
             finally
             {
