@@ -63,7 +63,7 @@ namespace Cabby.Client.Engine.Sessions
                 await DispatchCurrentSessionStatusAsync();
                 logger.StartingFrontend();
 
-                _frontendCompletionTcs = new TaskCompletionSource<bool>();
+                _frontendCompletionTcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
                 await processDispatcher.DispatchAsync(_currentSession.MainProcess, OnProcessExited, sessionCt);
                 await _frontendCompletionTcs.Task.WaitAsync(sessionCt);
 
