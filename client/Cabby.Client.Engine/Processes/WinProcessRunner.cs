@@ -9,20 +9,22 @@ namespace Cabby.Client.Engine.Processes
         WinProcessFactory factory,
         JobObjectManager jobObjectManager) : IProcessRunner
     {
+        public event EventHandler<ProcessStartedEventArgs>? ProcessStarted;
+
         public async Task RunAsync(
             ProcessDto processDto,
-            Action<ProcessCompletionContext> processCompletionCallback, 
+            Func<ProcessCompletionContext, Task> processCompletionCallbackAsync, 
             CancellationToken ct = default)
         {
             var createdProcess = factory.TryCreate(
                 processDto: processDto,
-                processCompletionCallback: processCompletionCallback,
+                processCompletionCallbackAsync: processCompletionCallbackAsync,
                 out var process,
                 out var failureReason);
 
             if (!createdProcess)
             {
-                processCompletionCallback(new ProcessCompletionContext
+                await processCompletionCallbackAsync(new ProcessCompletionContext
                 {
                     ProcessDto = processDto,
                     WasSuccessful = false,
@@ -43,6 +45,11 @@ namespace Cabby.Client.Engine.Processes
             ct.ThrowIfCancellationRequested();
             logger.StartingProcess(process!.PrettyName, process.PathWithArgs);
             process.StartInJob(jobObjectManager.SafeJobHandle);
+
+            ProcessStarted?.Invoke(null, new ProcessStartedEventArgs
+            {
+                ProcessDto = processDto
+            });
         }
     }
 }

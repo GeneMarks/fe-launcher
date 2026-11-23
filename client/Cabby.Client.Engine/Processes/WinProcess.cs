@@ -25,7 +25,7 @@ namespace Cabby.Client.Engine.Processes
         public required string PathWithArgs { get; init; }
         public required string PrettyName { get; init; }
 
-        public required Action<ProcessCompletionContext> ProcessCompletionCallback { private get; init; }
+        public required Func<ProcessCompletionContext, Task> ProcessCompletionCallbackAsync { private get; init; }
 
         public WinProcess()
         {
@@ -119,6 +119,7 @@ namespace Cabby.Client.Engine.Processes
                 _waitHandle, _waitCallback, null, -1, true);
         }
 
+        // This callback runs on an unmanaged OS thread.
         private void WaitCallback(object? state, bool timedOut)
         {
             uint exitCode;
@@ -136,7 +137,18 @@ namespace Cabby.Client.Engine.Processes
                 FailureMessage = exitCode == 0 ? null : $"Process '{PrettyName}' exited unexpectedly with exit code: {exitCode}."
             };
 
-            ProcessCompletionCallback(completionContext);
+            // Run callback safely in the managed .NET threadpool
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await ProcessCompletionCallbackAsync(completionContext);
+                }
+                catch (Exception ex)
+                {
+                    Logger.UnhandledProcessCompletionBridgeError(_pid, ex);
+                }
+            });
         }
 
         public void Dispose()

@@ -17,8 +17,8 @@ namespace Cabby.Client.Engine.Sessions.Logging
 
         [LoggerMessage(
             Level = LogLevel.Error,
-            Message = "Abandoning session due to an unexpected job object error that occurred during session shutdown.")]
-        public static partial void AbandoningSessionDueToJobObjectError(this ILogger logger, Exception? ex = null);
+            Message = "Abandoning session due to an unexpected win error that occurred during session shutdown.")]
+        public static partial void AbandoningSessionDueToWinError(this ILogger logger, Exception? ex = null);
 
         [LoggerMessage(
             Level = LogLevel.Warning,
@@ -42,8 +42,8 @@ namespace Cabby.Client.Engine.Sessions.Logging
 
         [LoggerMessage(
             Level = LogLevel.Information,
-            Message = "Waiting for session completion...")]
-        public static partial void WaitingForSessionCompletion(this ILogger logger);
+            Message = "Running ({Count}) post-processes...")]
+        public static partial void RunningPostProcesses(this ILogger logger, int count);
 
         [LoggerMessage(
             Level = LogLevel.Information,

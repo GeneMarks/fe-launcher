@@ -1,6 +1,8 @@
 ﻿using Cabby.Client.Engine.Exceptions;
+using Cabby.Client.Engine.Networking;
 using Cabby.Client.Engine.Processes;
 using Cabby.Client.Engine.Sessions.Logging;
+using Cabby.Client.Shared.Contracts.Network;
 using Cabby.Client.Shared.Contracts.Processes;
 using Cabby.Client.Shared.Contracts.Sessions;
 using Microsoft.Extensions.Logging;
@@ -9,6 +11,7 @@ namespace Cabby.Client.Engine.Sessions
 {
     internal sealed class SessionOrchestrator(
         ILogger<SessionOrchestrator> logger,
+        ServerMessageDispatcher serverMessageDispatcher,
         SessionStatusProvider sessionStatusProvider,
         SessionStatusUpdater sessionStatusUpdater,
         SessionLoggerScopeProvider sessionLoggerScopeProvider,
@@ -17,13 +20,15 @@ namespace Cabby.Client.Engine.Sessions
     {
         private SessionDto? _currentSession;
         private CancellationTokenSource? _sessionCts;
+        private TaskCompletionSource<bool>? _frontendCompletionTcs;
+        private bool _frontendWasSuccessful;
 
         public async Task StartNewSessionAsync(SessionDto sessionDto)
         {
             if (!sessionStatusProvider.IsIdle)
             {
                 logger.CannotStartMultipleSessions();
-                // TODO: Notify server
+                await serverMessageDispatcher.SendAsync(WebSocketMessageTypes.Outbound.CannotStartMultipleSessions);
                 return;
             }
 
@@ -31,6 +36,7 @@ namespace Cabby.Client.Engine.Sessions
             logger.StartingNewSession(_currentSession.Id);
             sessionStatusUpdater.UpdateSession(_currentSession);
             sessionStatusUpdater.UpdateStatus(SessionStatus.Pending);
+            await DispatchCurrentSessionStatusAsync();
 
             _sessionCts = new CancellationTokenSource();
             var sessionCt = _sessionCts.Token;
@@ -44,6 +50,7 @@ namespace Cabby.Client.Engine.Sessions
 
                 /* Pre-Processes */
                 sessionStatusUpdater.UpdateStatus(SessionStatus.RunningPreProcesses);
+                await DispatchCurrentSessionStatusAsync();
                 logger.RunningPreProcesses(_currentSession.PreProcesses.Length);
 
                 foreach (var preProcess in _currentSession.PreProcesses)
@@ -53,26 +60,31 @@ namespace Cabby.Client.Engine.Sessions
 
                 /* Frontend */
                 sessionStatusUpdater.UpdateStatus(SessionStatus.RunningFrontend);
+                await DispatchCurrentSessionStatusAsync();
                 logger.StartingFrontend();
 
+                _frontendCompletionTcs = new TaskCompletionSource<bool>();
                 await processDispatcher.DispatchAsync(_currentSession.MainProcess, OnProcessExited, sessionCt);
-
-                logger.WaitingForSessionCompletion();
-                await jobObjectManager.WaitForJobObjectCompletionAsync(sessionCt);
+                await _frontendCompletionTcs.Task.WaitAsync(sessionCt);
 
                 /* Post-Processes */
+                if (!_frontendWasSuccessful)
+                {
+                    await StopSessionAsync(SessionStatus.Failed);
+                    return;
+                }
+
                 sessionStatusUpdater.UpdateStatus(SessionStatus.RunningPostProcesses);
-                logger.RunningPostProcesses(_currentSession.PostProcesses.Length);
+                await DispatchCurrentSessionStatusAsync();
+                logger.RunningPostProcesses(_currentSession!.PostProcesses.Length);
 
                 foreach (var postProcess in _currentSession.PostProcesses)
                 {
-                    await processDispatcher.DispatchAsync(postProcess, OnProcessExited, sessionCt);
+                    await processDispatcher.DispatchAsync(postProcess, OnProcessExited, _sessionCts!.Token);
                 }
 
-                // TODO: Await the job object completion again for post-processes?
-
-                /* Completion */
                 sessionStatusUpdater.UpdateStatus(SessionStatus.Completed);
+                await DispatchCurrentSessionStatusAsync();
             }
             catch (OperationCanceledException) when (sessionCt.IsCancellationRequested)
             {
@@ -82,58 +94,53 @@ namespace Cabby.Client.Engine.Sessions
             catch (WinApiException ex)
             {
                 logger.FatalSessionError(ex.GetType().Name);
-                // notifier.Notify("Unexpected Error", "Ending the current session. Please see log for more details.");
-                // TODO: Notify server
                 await StopSessionAsync(SessionStatus.Failed);
+                await serverMessageDispatcher.SendAsync(WebSocketMessageTypes.Outbound.SessionFailed);
             }
             catch (Exception ex)
             {
                 logger.UnknownFatalSessionError(ex);
-                // notifier.Notify("Unexpected Error", "Ending the current session. Please see log for more details.");
-                // TODO: Notify server
-
                 await StopSessionAsync(SessionStatus.Failed);
+                await serverMessageDispatcher.SendAsync(WebSocketMessageTypes.Outbound.SessionFailed);
             }
             finally
             {
+                var finalSessionStatus = sessionStatusProvider.CurrentStatus;
                 var runtime = sessionStatusProvider.ElapsedTime;
                 var prettyRuntime = $"{(int)runtime.TotalHours} hrs {runtime.Minutes:00} min {runtime.Seconds:00} sec";
-                // TODO: Don't get status from the SessionDto?
-                logger.SessionFinalRuntime(_currentSession.Id, _currentSession.Status, prettyRuntime);
-
-                // TODO: Notify server
+                logger.SessionFinalRuntime(_currentSession.Id, finalSessionStatus, prettyRuntime);
 
                 sessionStatusUpdater.ResetState();
                 _sessionCts?.Dispose();
                 _sessionCts = null;
                 _currentSession = null;
+                _frontendCompletionTcs = null;
+                _frontendWasSuccessful = false;
+
+                await serverMessageDispatcher.SendAsync(WebSocketMessageTypes.Outbound.ReadyForSession);
             }
         }
 
         public void RequestCancelSession()
         {
-            CancellationTokenSource? cts = null;
-
-            if (sessionStatusProvider.IsActive)
+            if (sessionStatusProvider.IsCancellable)
             {
-                cts = _sessionCts;
+                _sessionCts?.Cancel();
             }
-
-            cts?.Cancel();
         }
 
         private async Task StopSessionAsync(SessionStatus intendedCompletionStatus)
         {
             sessionStatusUpdater.UpdateStatus(SessionStatus.Stopping);
 
-            // First attempt to close windows in the job object gracefully
-            logger.AttemptingToCloseProcessWindows();
-            await jobObjectManager.AttemptCloseWindowsInJobAsync(_currentSession!.GracefulCloseWindowsTimeoutMs);
-
             var completionStatus = intendedCompletionStatus;
-            // Then always terminate the job object to ensure all processes are cleaned up
             try
             {
+                // First attempt to close windows in the job object gracefully
+                logger.AttemptingToCloseProcessWindows();
+                await jobObjectManager.AttemptCloseWindowsInJobAsync(_currentSession!.GracefulCloseWindowsTimeoutMs);
+
+                // Then always terminate the job object to ensure all processes are cleaned up
                 logger.TerminatingProcesses();
                 jobObjectManager.TerminateJobObject();
 
@@ -146,34 +153,69 @@ namespace Cabby.Client.Engine.Sessions
             {
                 logger.AbandoningSessionDueToWinError(ex);
                 completionStatus = SessionStatus.Failed;
+                await serverMessageDispatcher.SendAsync(WebSocketMessageTypes.Outbound.SessionFailed);
             }
             finally
             {
                 sessionStatusUpdater.UpdateStatus(completionStatus);
+                await DispatchCurrentSessionStatusAsync();
             }
         }
 
-        private void OnProcessExited(ProcessCompletionContext context)
+        private async Task OnProcessStarted(object? sender, ProcessStartedEventArgs e)
         {
-            switch (context.ProcessDto.ExitBehavior)
+            await DispatchProcessStatusUpdateAsync(e.ProcessDto, ProcessStatus.Running);
+        }
+
+        private async Task OnProcessExited(ProcessCompletionContext context)
+        {
+            if (!context.WasSuccessful)
             {
-                case ProcessExitBehavior.None:
-                    break;
-
-                case ProcessExitBehavior.EndSession:
-                    _sessionCts!.Cancel();
-                    break;
-
-                case ProcessExitBehavior.RestartSession:
-                    // Don't do anything when not in a cancelable active session
-                    if (!sessionStatusProvider.IsActive || _sessionCts?.Token.IsCancellationRequested == true) return;
-                    // TODO
-                    break;
-
-                case ProcessExitBehavior.RestartSelf:
-                    // TODO
-                    break;
+                // TODO: stuff
             }
+
+            await DispatchProcessStatusUpdateAsync(
+                context.ProcessDto,
+                context.WasSuccessful ? ProcessStatus.Completed : ProcessStatus.Failed);
+
+            if (context.ProcessDto.Phase == ProcessPhase.Main)
+            {
+                _frontendWasSuccessful = context.WasSuccessful;
+                _frontendCompletionTcs?.TrySetResult(true);
+            }
+        }
+
+        private async Task DispatchProcessStatusUpdateAsync(ProcessDto processDto, ProcessStatus processStatus)
+        {
+            await serverMessageDispatcher.SendAsync(
+                WebSocketMessageTypes.Outbound.ProcessStatusUpdate,
+                new ProcessStatusUpdateDto
+                {
+                    Id = processDto.Id,
+                    SessionId = processDto.SessionId,
+                    Status = processStatus
+                },
+                _sessionCts?.Token ?? default);
+        }
+
+        private async Task DispatchCurrentSessionStatusAsync()
+        {
+            if (_currentSession is null)
+            {
+                // TODO: Logging
+                return;
+            }
+
+            var sessionStatusUpdate = new SessionStatusUpdateDto
+            {
+                Id = _currentSession.Id,
+                Status = _currentSession.Status
+            };
+
+            await serverMessageDispatcher.SendAsync(
+                WebSocketMessageTypes.Outbound.SessionStatusUpdate,
+                sessionStatusUpdate,
+                _sessionCts?.Token ?? default);
         }
     }
 }

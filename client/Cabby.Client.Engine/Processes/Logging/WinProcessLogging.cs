@@ -23,5 +23,10 @@ namespace Cabby.Client.Engine.Processes.Logging
             Level = LogLevel.Error,
             Message = "Process {PID} '{PrettyName}' ({ProcessPath}) exited with code: {ExitCode}")]
         public static partial void ProcessExited(this ILogger logger, uint pid, string processPath, string prettyName, uint exitCode);
+
+        [LoggerMessage(
+            Level = LogLevel.Error,
+            Message = "Unhandled error in process completion bridge for PID {Pid}.")]
+        public static partial void UnhandledProcessCompletionBridgeError(this ILogger logger, uint pid, Exception ex);
     }
 }

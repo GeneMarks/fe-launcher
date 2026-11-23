@@ -15,7 +15,7 @@ namespace Cabby.Client.Engine.Processes
         /// a <see cref="WinProcess"/> configured to start from the executable's directory.
         /// </summary>
         /// <param name="processDto">A reference to the <see cref="ProcessDto"/>.</param>
-        /// <param name="processCompletionCallback">The <see cref="Action<ProcessCompletionContext>"/> containing the callback that will execute process exit.</param>
+        /// <param name="processCompletionCallbackAsync">The <see cref="Func<ProcessCompletionContext, Task>"/> containing the callback that will execute process exit.</param>
         /// <param name="process">
         /// Contains the created <see cref="WinProcess"/> instance if the method returns <c>true</c>,
         /// otherwise contains <c>null</c>.
@@ -29,7 +29,7 @@ namespace Cabby.Client.Engine.Processes
         /// </returns>
         public bool TryCreate(
             ProcessDto processDto,
-            Action<ProcessCompletionContext> processCompletionCallback, 
+            Func<ProcessCompletionContext, Task> processCompletionCallbackAsync, 
             out WinProcess? process,
             out string? failureReason)
         {
@@ -71,7 +71,7 @@ namespace Cabby.Client.Engine.Processes
                 PathWithArgs = pathWithArgs,
                 WorkingDir = workingDir,
                 PrettyName = prettyName,
-                ProcessCompletionCallback = processCompletionCallback
+                ProcessCompletionCallbackAsync = processCompletionCallbackAsync
             };
 
             return true;

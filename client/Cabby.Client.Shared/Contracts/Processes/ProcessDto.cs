@@ -12,6 +12,5 @@ namespace Cabby.Client.Shared.Contracts.Processes
         public required int DelayMs { get; init; }
         public required int Order { get; init; }
         public required ProcessStatus Status { get; init; }
-        public required ProcessExitBehavior ExitBehavior { get; init; }
     }
 }

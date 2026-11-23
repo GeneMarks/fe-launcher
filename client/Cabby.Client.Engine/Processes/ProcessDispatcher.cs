@@ -4,13 +4,23 @@ namespace Cabby.Client.Engine.Processes
 {
     internal sealed class ProcessDispatcher(IEnumerable<IProcessRunner> runners)
     {
+        public event EventHandler<ProcessStartedEventArgs>? ProcessStarted;
+
         public async Task DispatchAsync(
             ProcessDto processDto,
-            Action<ProcessCompletionContext> processCompletionCallback, 
+            Func<ProcessCompletionContext, Task> processCompletionCallbackAsync, 
             CancellationToken ct)
         {
             var runner = ResolveRunner(processDto);
-            await runner.RunAsync(processDto, processCompletionCallback, ct);
+            runner.ProcessStarted += OnProcessStarted;
+            try
+            {
+                await runner.RunAsync(processDto, processCompletionCallbackAsync, ct);
+            }
+            finally
+            {
+                runner.ProcessStarted -= OnProcessStarted;
+            }
         }
 
         private IProcessRunner ResolveRunner(ProcessDto processDto) => processDto.Type switch
@@ -18,5 +28,10 @@ namespace Cabby.Client.Engine.Processes
             ProcessType.Executable => runners.OfType<WinProcessRunner>().First(),
             // ProcessType.LuaScript => runners.OfType<LuaProcessRunner>().First()
         };
+
+        private void OnProcessStarted(object? sender, ProcessStartedEventArgs e)
+        {
+            ProcessStarted?.Invoke(sender, e);
+        }
     }
 }
