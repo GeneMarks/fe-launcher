@@ -13,23 +13,26 @@ namespace Cabby.Client.Engine.Processes
 
         public async Task RunAsync(
             ProcessDto processDto,
-            Func<ProcessCompletionContext, Task> processCompletionCallbackAsync, 
+            Func<ProcessCompletionContext, Task>? processCompletionCallbackAsync = null, 
             CancellationToken ct = default)
         {
             var createdProcess = factory.TryCreate(
-                processDto: processDto,
-                processCompletionCallbackAsync: processCompletionCallbackAsync,
+                processDto,
+                processCompletionCallbackAsync,
                 out var process,
                 out var failureReason);
 
             if (!createdProcess)
             {
-                await processCompletionCallbackAsync(new ProcessCompletionContext
+                if (processCompletionCallbackAsync is not null)
                 {
-                    ProcessDto = processDto,
-                    WasSuccessful = false,
-                    FailureMessage = failureReason 
-                });
+                    await processCompletionCallbackAsync(new ProcessCompletionContext
+                    {
+                        ProcessDto = processDto,
+                        WasSuccessful = false,
+                        FailureMessage = failureReason 
+                    });
+                }
                 return;
             }
 
@@ -46,10 +49,33 @@ namespace Cabby.Client.Engine.Processes
             logger.StartingProcess(process!.PrettyName, process.PathWithArgs);
             process.StartInJob(jobObjectManager.SafeJobHandle);
 
-            ProcessStarted?.Invoke(null, new ProcessStartedEventArgs
+            ProcessStarted?.Invoke(this, new ProcessStartedEventArgs
             {
                 ProcessDto = processDto
             });
+        }
+
+        public async Task RunAndWaitAsync(
+            ProcessDto processDto,
+            Func<ProcessCompletionContext, Task>? processCompletionCallbackAsync = null, 
+            CancellationToken ct = default)
+        {
+            var tcs = new TaskCompletionSource<ProcessCompletionContext>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+            await RunAsync(
+                processDto,
+                async processCompletionContext =>
+                {
+                    tcs.TrySetResult(processCompletionContext);
+
+                    if (processCompletionCallbackAsync is not null)
+                    {
+                        await processCompletionCallbackAsync(processCompletionContext);
+                    }
+                },
+                ct);
+
+            await tcs.Task.WaitAsync(ct);
         }
     }
 }

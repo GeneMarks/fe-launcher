@@ -80,7 +80,7 @@ namespace Cabby.Client.Engine.Sessions
 
                 foreach (var postProcess in _currentSession.PostProcesses)
                 {
-                    await processDispatcher.DispatchAsync(postProcess, OnProcessExited, _sessionCts!.Token);
+                    await processDispatcher.DispatchAndWaitAsync(postProcess, OnProcessExited, _sessionCts!.Token);
                 }
 
                 sessionStatusUpdater.UpdateStatus(SessionStatus.Completed);

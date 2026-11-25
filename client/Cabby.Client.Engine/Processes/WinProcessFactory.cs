@@ -29,7 +29,7 @@ namespace Cabby.Client.Engine.Processes
         /// </returns>
         public bool TryCreate(
             ProcessDto processDto,
-            Func<ProcessCompletionContext, Task> processCompletionCallbackAsync, 
+            Func<ProcessCompletionContext, Task>? processCompletionCallbackAsync, 
             out WinProcess? process,
             out string? failureReason)
         {

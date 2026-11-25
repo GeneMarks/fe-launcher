@@ -8,7 +8,12 @@ namespace Cabby.Client.Engine.Processes
 
         Task RunAsync(
             ProcessDto process,
-            Func<ProcessCompletionContext, Task> processCompletionCallbackAsync,
+            Func<ProcessCompletionContext, Task>? processCompletionCallbackAsync,
+            CancellationToken ct = default);
+
+        Task RunAndWaitAsync(
+            ProcessDto process,
+            Func<ProcessCompletionContext, Task>? processCompletionCallbackAsync,
             CancellationToken ct = default);
     }
 }

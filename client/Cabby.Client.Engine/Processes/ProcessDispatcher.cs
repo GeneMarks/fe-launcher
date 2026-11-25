@@ -6,16 +6,34 @@ namespace Cabby.Client.Engine.Processes
     {
         public event EventHandler<ProcessStartedEventArgs>? ProcessStarted;
 
-        public async Task DispatchAsync(
+        public Task DispatchAsync(
             ProcessDto processDto,
-            Func<ProcessCompletionContext, Task> processCompletionCallbackAsync, 
-            CancellationToken ct)
+            Func<ProcessCompletionContext, Task>? processCompletionCallbackAsync = null, 
+            CancellationToken ct = default)
+            => ExecuteWithRunnerAsync(
+                processDto,
+                runner => runner.RunAsync(processDto, processCompletionCallbackAsync, ct)
+            );
+
+        public Task DispatchAndWaitAsync(
+            ProcessDto processDto,
+            Func<ProcessCompletionContext, Task>? processCompletionCallbackAsync = null, 
+            CancellationToken ct = default)
+            => ExecuteWithRunnerAsync(
+                processDto,
+                runner => runner.RunAndWaitAsync(processDto, processCompletionCallbackAsync, ct)
+            );
+
+        private async Task ExecuteWithRunnerAsync(
+            ProcessDto processDto,
+            Func<IProcessRunner, Task> actionAsync
+        )
         {
             var runner = ResolveRunner(processDto);
             runner.ProcessStarted += OnProcessStarted;
             try
             {
-                await runner.RunAsync(processDto, processCompletionCallbackAsync, ct);
+                await actionAsync(runner);
             }
             finally
             {

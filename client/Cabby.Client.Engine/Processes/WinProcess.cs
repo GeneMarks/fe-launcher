@@ -25,7 +25,7 @@ namespace Cabby.Client.Engine.Processes
         public required string PathWithArgs { get; init; }
         public required string PrettyName { get; init; }
 
-        public required Func<ProcessCompletionContext, Task> ProcessCompletionCallbackAsync { private get; init; }
+        public required Func<ProcessCompletionContext, Task>? ProcessCompletionCallbackAsync { private get; init; }
 
         public WinProcess()
         {
@@ -129,6 +129,8 @@ namespace Cabby.Client.Engine.Processes
             }
 
             Logger.ProcessExited(_pid, PathWithArgs, PrettyName, exitCode);
+
+            if (ProcessCompletionCallbackAsync is null) return;
 
             var completionContext = new ProcessCompletionContext
             {
